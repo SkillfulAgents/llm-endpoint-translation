@@ -13,7 +13,14 @@ export default tseslint.config(
     },
   },
   {
-    files: ["scripts/**/*.mjs"],
-    languageOptions: { globals: { console: "readonly", process: "readonly", fetch: "readonly", URL: "readonly" } },
+    files: ["scripts/**/*.mjs", "bench/**/*.mjs"],
+    languageOptions: {
+      globals: Object.fromEntries(
+        [
+          "console", "process", "fetch", "URL", "Buffer", "Response", "AbortController", "TextDecoder",
+          "setTimeout", "setInterval", "clearInterval",
+        ].map((name) => [name, "readonly"]),
+      ),
+    },
   },
 );
