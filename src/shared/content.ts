@@ -125,6 +125,14 @@ export function anthropicDocument(block: Record<string, unknown>): AnthropicDocu
   return null;
 }
 
+const ALREADY_MARKED_ERROR_RE = /^\s*(?:error\b|<tool_use_error>)/i;
+
+// OpenAI tool outputs have no error flag, so an `is_error` result has to say so in its text.
+export function toolResultOutputText(text: string, isError: unknown): string {
+  if (isError !== true || ALREADY_MARKED_ERROR_RE.test(text)) return text;
+  return text ? `Error: ${text}` : "Error";
+}
+
 /** Return value from `mapImageSource` — omit the image and surface `reason` as text. */
 export type ImageOmit = { reason: string; mediaType?: string };
 

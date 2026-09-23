@@ -9,9 +9,11 @@ import {
   splitSteerSystemText,
   splitToolResultContent,
   systemToText,
+  toolResultOutputText,
   type AnthropicDocument,
   type ImageOmit,
 } from "../shared/content.js";
+import { disablesParallelToolUse } from "../shared/tool-choice.js";
 import { defaultEffortMapper, type EffortMapper } from "../shared/effort.js";
 import {
   readAnthropicJsonSchemaFormat,
@@ -81,6 +83,7 @@ export function messagesRequestToResponses(
   );
   const toolChoice = convertToolChoice(body.tool_choice, functionNames, tools.length > 0);
   if (toolChoice !== undefined) out.tool_choice = toolChoice;
+  if (tools.length > 0 && disablesParallelToolUse(body.tool_choice)) out.parallel_tool_calls = false;
 
   // Responses accepts reasoning + tools together (the whole reason this codec
   // exists). `summary: "auto"` lets the model surface reasoning summaries.
@@ -218,6 +221,7 @@ function pushUserBlocks(
         options?.mapImageSource,
       );
       const { cleaned, steers } = extractMidTurnSteers(text);
+      const outputText = toolResultOutputText(cleaned, block.is_error);
       // `output` may be a part array; documents ride there as input_file.
       input.push({
         type: "function_call_output",
@@ -225,10 +229,10 @@ function pushUserBlocks(
         output:
           documents.length > 0
             ? [
-                ...(cleaned ? [{ type: "input_text", text: cleaned }] : []),
+                ...(outputText ? [{ type: "input_text", text: outputText }] : []),
                 ...documents.map(documentPart),
               ]
-            : cleaned,
+            : outputText,
       });
       // Claude Code delivers mid-turn user messages as a <system-reminder>
       // appended to the tool result. Claude is trained on that convention;

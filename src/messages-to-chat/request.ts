@@ -8,10 +8,12 @@ import {
   splitSteerSystemText,
   splitToolResultContent,
   systemToText,
+  toolResultOutputText,
   type AnthropicDocument,
 } from "../shared/content.js";
 import { effortFromThinkingBudget } from "../shared/effort.js";
 import { readAnthropicJsonSchemaFormat, toChatResponseFormat } from "../shared/structured-output.js";
+import { disablesParallelToolUse } from "../shared/tool-choice.js";
 import { shortenToolName } from "../shared/tool-names.js";
 
 const CHAT_EFFORT_LEVELS = new Set(["low", "medium", "high", "xhigh", "max"]);
@@ -72,6 +74,8 @@ export function messagesRequestToChatCompletions(
   if (tools.length > 0) out.tools = tools;
   const toolChoice = convertToolChoice(body.tool_choice, tools);
   if (toolChoice !== undefined) out.tool_choice = toolChoice;
+  // OpenAI rejects parallel_tool_calls on a request with no tools.
+  if (tools.length > 0 && disablesParallelToolUse(body.tool_choice)) out.parallel_tool_calls = false;
 
   const jsonSchema = readAnthropicJsonSchemaFormat(body);
   if (jsonSchema) out.response_format = toChatResponseFormat(jsonSchema);
@@ -156,7 +160,7 @@ function pushUserBlocks(
       out.push({
         role: "tool",
         tool_call_id: block.tool_use_id,
-        content: cleaned,
+        content: toolResultOutputText(cleaned, block.is_error),
       });
       // Mid-turn user messages ride inside tool results as <system-reminder>
       // for Claude; other models treat tool output as data — re-surface them.

@@ -1822,3 +1822,65 @@ describe("responsesSSEToAnthropicSSE — summary parts, refusals, restored tool 
     expect(out.find((f) => f.type === "content_block_start")?.content_block).toMatchObject({ type: "tool_use", name: long });
   });
 });
+
+describe("anthropicRequestToResponses — parallel tool use and tool errors", () => {
+  const tools = [{ name: "f", input_schema: { type: "object" } }];
+  const toolResult = (block: Record<string, unknown>) =>
+    anthropicRequestToResponses({
+      model: "m",
+      messages: [{ role: "user", content: [{ type: "tool_result", tool_use_id: "t1", ...block }] }],
+    }).input;
+
+  it("sends parallel_tool_calls false for disable_parallel_tool_use, including built-in-only tools", () => {
+    const build = (toolList: unknown[]) =>
+      anthropicRequestToResponses({
+        model: "m",
+        messages: [],
+        tools: toolList,
+        tool_choice: { type: "auto", disable_parallel_tool_use: true },
+      }).parallel_tool_calls;
+    expect(build(tools)).toBe(false);
+    expect(build([{ type: "web_search_20250305", name: "web_search" }])).toBe(false);
+  });
+
+  it("omits parallel_tool_calls when the flag is absent or no tools survive translation", () => {
+    expect(
+      anthropicRequestToResponses({ model: "m", messages: [], tools, tool_choice: { type: "any" } }).parallel_tool_calls,
+    ).toBeUndefined();
+    expect(
+      anthropicRequestToResponses({
+        model: "m",
+        messages: [],
+        tools: [{ type: "code_execution_20250825", name: "code_execution" }],
+        tool_choice: { type: "auto", disable_parallel_tool_use: true },
+      }).parallel_tool_calls,
+    ).toBeUndefined();
+  });
+
+  it("marks an is_error tool result as an error in function_call_output", () => {
+    expect(toolResult({ is_error: true, content: "permission denied" })).toEqual([
+      { type: "function_call_output", call_id: "t1", output: "Error: permission denied" },
+    ]);
+  });
+
+  it("marks the text part of an is_error result that also carries a document", () => {
+    expect(
+      toolResult({
+        is_error: true,
+        content: [
+          { type: "text", text: "partial render" },
+          { type: "document", source: { type: "url", url: "https://x.test/a.pdf" } },
+        ],
+      }),
+    ).toEqual([
+      {
+        type: "function_call_output",
+        call_id: "t1",
+        output: [
+          { type: "input_text", text: "Error: partial render" },
+          { type: "input_file", file_url: "https://x.test/a.pdf" },
+        ],
+      },
+    ]);
+  });
+});

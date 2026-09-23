@@ -18,6 +18,8 @@ Evidence column:
 | Tool calls and results | `function_call` / `function_call_output`; functions sent with `strict: false` | `tool_calls` / `tool` messages | U, L, S |
 | Parallel tool calls | Supported | Supported, including vendors that omit the per-call `index` (told apart by position). The first call streams live; later calls are emitted after it so only one block is open at a time | U, S |
 | `tool_choice` | `auto` → `auto`, `any` → `required`, `none` → `none`, `tool` → forced function. Forcing a non-function or unknown tool is omitted. | Same | U |
+| `disable_parallel_tool_use` | `parallel_tool_calls: false` (only when tools are sent) | Same | U |
+| Failed tool results (`is_error: true`) | Output text is prefixed with `Error: ` unless it already reads as an error (`Error…` or `<tool_use_error>`) | Same | U |
 | Tool names over 64 characters | Shortened to a stable 64-character hashed name in `tools`, history, and `tool_choice`. Pass `toolNameRestoreMap(request)` as the reply/stream `toolNames` option to get the original names back. | Same | U |
 | Images in user turns | Base64 → data URL, URL passed through. Optional `mapImageSource` filter can drop images with a note. | Base64 → data URL, URL passed through. No filter hook. | U, S |
 | Images in tool results | Moved to a follow-up user message | Same | U |
@@ -75,5 +77,5 @@ These Anthropic features have no translation. The codec does not claim an equiva
 - Replaying encrypted reasoning across different accounts of the same vendor.
 - That an upstream stops generating after a cancel. The bench proxy does abort its upstream request.
 - Structured output, stop sequences, and effort mapping against live upstreams (unit-tested only).
-- Documents, refusals, `tool_choice: none`, and shortened tool names against live upstreams (unit-tested and spec-validated only). Whether each Chat Completions vendor accepts `file` parts is untested.
+- Documents, refusals, `tool_choice: none`, `parallel_tool_calls: false`, and shortened tool names against live upstreams (unit-tested and spec-validated only). Whether each Chat Completions vendor accepts `file` parts is untested.
 - The codecs embedded in the agent server process. The bench runs them in a separate Node process in the same image.
