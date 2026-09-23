@@ -1,6 +1,7 @@
 // Spike proxy: Anthropic Messages in, OpenAI Responses or Chat Completions upstream, Messages out.
 // Config (env): BACKEND=responses|chat|passthrough, UPSTREAM_BASE_URL, UPSTREAM_API_KEY, UPSTREAM_MODEL, PROXY_PORT,
-// CHAT_TOKEN_LIMIT_FIELD (e.g. max_completion_tokens), CHAT_OMIT_REASONING_EFFORT=1.
+// CHAT_TOKEN_LIMIT_FIELD (e.g. max_completion_tokens), CHAT_OMIT_REASONING_EFFORT=1,
+// REPLAY_SCOPE (Responses only: sign and replay encrypted reasoning under this connection scope).
 
 import { createServer } from "node:http";
 import { Readable } from "node:stream";
@@ -15,28 +16,31 @@ import {
   responsesStreamToMessagesStream,
 } from "../dist/index.js";
 
+const reasoningReplayScope = process.env.REPLAY_SCOPE || undefined;
+
 const BACKENDS = {
   // Baseline: same HTTP path with no translation, to isolate codec cost.
   passthrough: {
     path: "/messages",
-    request: (body) => body,
+    request: (body) => ({ body }),
     reply: (json) => json,
     stream: (input) => input,
   },
   responses: {
     path: "/responses",
-    request: (body) => messagesRequestToResponses(body).body,
-    reply: (json, model) => responsesResponseToMessages(json, { model }),
-    stream: (input, model) => responsesStreamToMessagesStream(input, { model }),
+    request: (body) => messagesRequestToResponses(body, { reasoningReplayScope }),
+    reply: (json, model) => responsesResponseToMessages(json, { model, reasoningReplayScope }),
+    stream: (input, model) => responsesStreamToMessagesStream(input, { model, reasoningReplayScope }),
   },
   chat: {
     path: "/chat/completions",
     // Provider adapter options: OpenAI GPT-5 chat needs max_completion_tokens; non-reasoning models reject reasoning_effort.
-    request: (body) =>
-      messagesRequestToChatCompletions(body, {
-        tokenLimitField: process.env.CHAT_TOKEN_LIMIT_FIELD,
+    request: (body) => ({
+      body: messagesRequestToChatCompletions(body, {
+        tokenLimitField: process.env.CHAT_TOKEN_LIMIT_FIELD || undefined,
         ...(process.env.CHAT_OMIT_REASONING_EFFORT === "1" ? { mapReasoningEffort: () => undefined } : {}),
       }),
+    }),
     reply: (json, model) => chatCompletionsResponseToMessages(json, { model }),
     stream: (input, model) => chatCompletionsStreamToMessagesStream(input, { model }),
   },
@@ -70,7 +74,8 @@ async function handleMessages(req, res) {
   const started = Date.now();
   const body = await readJson(req);
   const clientModel = typeof body.model === "string" ? body.model : "unknown";
-  const upstreamBody = config.backend.request({ ...body, model: config.model });
+  const { body: upstreamBody, replayedReasoning } = config.backend.request({ ...body, model: config.model });
+  const historyThinking = (body.messages ?? []).flatMap((m) => (Array.isArray(m.content) ? m.content : [])).filter((b) => b?.type === "thinking").length;
 
   const abort = new AbortController();
   res.on("close", () => {
@@ -106,12 +111,20 @@ async function handleMessages(req, res) {
     res.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-cache" });
     const translated = config.backend.stream(upstream.body, clientModel);
     await new Promise((resolve) => {
-      Readable.fromWeb(translated).on("error", resolve).pipe(res).on("finish", resolve).on("close", resolve);
+      // The codecs error the stream on an upstream read failure; the client must see a broken connection.
+      const onError = (err) => {
+        res.destroy(err);
+        resolve();
+      };
+      Readable.fromWeb(translated).on("error", onError).pipe(res).on("finish", resolve).on("close", resolve);
     });
   } else {
     sendJson(res, 200, config.backend.reply(await upstream.json(), clientModel));
   }
-  if (config.log) console.error(`[proxy] ${clientModel} stream=${body.stream === true} ${Date.now() - started}ms`);
+  if (config.log) {
+    const replay = replayedReasoning === undefined ? "" : ` history_thinking=${historyThinking} replayed=${replayedReasoning}`;
+    console.error(`[proxy] ${clientModel} stream=${body.stream === true}${replay} ${Date.now() - started}ms`);
+  }
 }
 
 const server = createServer(async (req, res) => {

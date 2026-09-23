@@ -9,7 +9,6 @@ Pure, dependency-free translation between the **Anthropic Messages API** and the
 | Messages client → Chat Completions upstream | `messagesRequestToChatCompletions` | `chatCompletionsResponseToMessages` | `chatCompletionsStreamToMessagesStream` | `responsesErrorToMessagesError` (same OpenAI error envelope) |
 
 Streams are Web Streams (`ReadableStream<Uint8Array>` of SSE bytes in, SSE bytes out) and work on Node 20+, Deno, Bun, and edge runtimes.
-
 ## Install
 
 Not published to the npm registry. Each [GitHub Release](https://github.com/SkillfulAgents/llm-endpoint-translation/releases) ships a package tarball; depend on its URL (pnpm and npm pin its integrity hash in the lockfile):
@@ -35,6 +34,10 @@ return new Response(responsesStreamToMessagesStream(upstream.body!), {
 ```
 
 Unsupported input (e.g. stateful `previous_response_id`) throws `TranslationError` with an OpenAI-style `code`.
+
+## Compatibility
+
+What translates, what doesn't, and what a host must handle itself: [`docs/compatibility.md`](docs/compatibility.md).
 
 ## Testing
 
