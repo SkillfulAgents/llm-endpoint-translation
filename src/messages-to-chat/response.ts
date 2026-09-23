@@ -37,7 +37,7 @@ export function chatCompletionsResponseToMessages(
       sawToolCall = true;
       blocks.push({
         type: "tool_use",
-        id: typeof call.id === "string" ? call.id : "",
+        id: typeof call.id === "string" && call.id ? call.id : fallbackToolUseId(),
         name: typeof fn.name === "string" ? restoreToolName(fn.name, options?.toolNames) : "",
         input: parseJsonOrEmpty(fn.arguments),
       });
@@ -54,6 +54,11 @@ export function chatCompletionsResponseToMessages(
     stop_sequence: null,
     usage: extractChatCompletionsUsage(body.usage),
   };
+}
+
+// Tool results are matched by id across the whole conversation, so a missing id must still be unique.
+export function fallbackToolUseId(): string {
+  return `toolu_${crypto.randomUUID().replace(/-/g, "")}`;
 }
 
 export function mapFinishReason(

@@ -3,7 +3,7 @@
 import { responsesErrorToMessagesError } from "../messages-to-responses/error.js";
 import { readWithIdleTimeout, STREAM_IDLE_TIMEOUT_MS } from "../shared/idle-read.js";
 import { restoreToolName } from "../shared/tool-names.js";
-import { extractChatCompletionsUsage, mapFinishReason } from "./response.js";
+import { extractChatCompletionsUsage, fallbackToolUseId, mapFinishReason } from "./response.js";
 
 export const CHAT_COMPLETIONS_STREAM_IDLE_TIMEOUT_MS = STREAM_IDLE_TIMEOUT_MS;
 
@@ -231,7 +231,7 @@ class ChatTranslatorState {
     let toolCall = this.toolCalls.get(callIndex);
     if (!toolCall) {
       toolCall = {
-        id: typeof call.id === "string" ? call.id : `call_${callIndex}`,
+        id: typeof call.id === "string" && call.id ? call.id : fallbackToolUseId(),
         name: typeof fn.name === "string" ? restoreToolName(fn.name, this.toolNames) : "",
         args: "",
       };

@@ -325,6 +325,32 @@ describe("chatCompletionsResponseToAnthropic", () => {
   });
 });
 
+describe("tool calls without an id", () => {
+  it("get unique non-empty tool_use ids in JSON replies and streams", async () => {
+    const reply = chatCompletionsResponseToAnthropic({
+      choices: [
+        {
+          finish_reason: "tool_calls",
+          message: { tool_calls: [{ function: { name: "a", arguments: "{}" } }, { function: { name: "b", arguments: "{}" } }] },
+        },
+      ],
+    });
+    const replyIds = (reply.content as Array<{ id: string }>).map((b) => b.id);
+    const streamId = async () => {
+      const body = [
+        `data: ${JSON.stringify({ choices: [{ index: 0, delta: { tool_calls: [{ index: 0, function: { name: "a", arguments: "{}" } }] } }] })}`,
+        `data: ${JSON.stringify({ choices: [{ index: 0, delta: {}, finish_reason: "tool_calls" }], usage: {} })}`,
+        "",
+      ].join("\n\n");
+      const out = await new Response(chatCompletionsStreamToMessagesStream(new Response(body).body!)).text();
+      return /"content_block":\{"type":"tool_use","id":"([^"]*)"/.exec(out)?.[1];
+    };
+    const ids = [...replyIds, await streamId(), await streamId()];
+    expect(ids.every((id) => typeof id === "string" && id.startsWith("toolu_"))).toBe(true);
+    expect(new Set(ids).size).toBe(4);
+  });
+});
+
 describe("translateChatUsage", () => {
   it("subtracts cached tokens from input, matching Anthropic semantics", () => {
     expect(
@@ -1005,13 +1031,13 @@ describe("chatCompletionsStreamToMessagesStream — edge cases", () => {
     expect(out.filter((f) => f.type === "content_block_start")).toHaveLength(1);
   });
 
-  it("names a tool call without an id after its index", async () => {
+  it("gives a tool call without an id a generated tool_use id", async () => {
     const body = [
       line({ id: "c", model: "m", choices: [{ index: 0, delta: { tool_calls: [{ index: 3, function: { name: "f", arguments: "{}" } }] }, finish_reason: "tool_calls" }], usage }),
       "",
     ].join("\n\n");
     const out = await frames(chatCompletionsStreamToMessagesStream(text(body)));
-    expect(out.find((f) => f.type === "content_block_start")?.content_block).toMatchObject({ type: "tool_use", id: "call_3" });
+    expect(out.find((f) => f.type === "content_block_start")?.content_block).toMatchObject({ type: "tool_use", id: expect.stringMatching(/^toolu_[0-9a-f]{32}$/) });
   });
 
   it("emits message_start before an error chunk that arrives first", async () => {
