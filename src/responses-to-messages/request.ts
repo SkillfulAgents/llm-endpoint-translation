@@ -12,8 +12,17 @@ type Message = { role: "user" | "assistant"; content: Block[] };
 // Translation is stateless: nothing that needs a stored response or conversation.
 const STATEFUL_FIELDS = ["previous_response_id", "conversation", "prompt"] as const;
 
+export type MessagesRequestOptions = {
+  /**
+   * Send `thinking: { type: "adaptive" }` with a reasoning effort. Without it Claude does not
+   * think at all; only set it for models that support adaptive thinking (older ones 400).
+   */
+  adaptiveThinking?: boolean;
+};
+
 export function responsesRequestToMessages(
   body: Record<string, unknown>,
+  options?: MessagesRequestOptions,
 ): Record<string, unknown> {
   for (const field of STATEFUL_FIELDS) {
     if (body[field] !== undefined && body[field] !== null) {
@@ -51,6 +60,7 @@ export function responsesRequestToMessages(
     out.thinking = { type: "disabled" };
   } else if (typeof effort === "string") {
     outputConfig.effort = effort;
+    if (options?.adaptiveThinking) out.thinking = { type: "adaptive" };
   }
   const format = asRecord(asRecord(body.text)?.format);
   if (format?.type === "json_schema") {

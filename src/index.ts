@@ -50,6 +50,7 @@ export {
 export {
   DEFAULT_MAX_OUTPUT_TOKENS,
   responsesRequestToMessages,
+  type MessagesRequestOptions,
 } from "./responses-to-messages/request.js";
 export {
   messagesErrorToResponsesError,

@@ -101,6 +101,15 @@ describe("responsesRequestToMessages", () => {
     });
   });
 
+  it("adds adaptive thinking with an effort only when adaptiveThinking is set", () => {
+    const body = { model: "m", input: "x", reasoning: { effort: "high" } };
+    expect(responsesRequestToMessages(body).thinking).toBeUndefined();
+    expect(responsesRequestToMessages(body, { adaptiveThinking: true }).thinking).toEqual({ type: "adaptive" });
+    expect(
+      responsesRequestToMessages({ ...body, reasoning: { effort: "none" } }, { adaptiveThinking: true }).thinking,
+    ).toEqual({ type: "disabled" });
+  });
+
   it("disables thinking for effort none/minimal", () => {
     expect(responsesRequestToMessages({ model: "m", input: "x", reasoning: { effort: "minimal" } }).thinking).toEqual({
       type: "disabled",

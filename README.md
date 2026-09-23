@@ -126,7 +126,7 @@ An OpenAI Responses client (for example the `openai` SDK) talking to an Anthropi
 - **`tool_choice`.** `auto`, `required` → `any`, `none`, and a named function. `parallel_tool_calls: false` becomes `disable_parallel_tool_use`.
 - **Images** as data URLs or https URLs.
 - **Structured output.** `text.format` (JSON schema) becomes `output_config.format`.
-- **Reasoning.** `reasoning.effort` becomes `output_config.effort`; `none` and `minimal` turn thinking off. Thinking comes back as `reasoning` items, with the signature in `encrypted_content`, so a client that sends the item back gets the exact thinking replayed. `redacted_thinking` round-trips the same way.
+- **Reasoning.** `reasoning.effort` becomes `output_config.effort`; `none` and `minimal` turn thinking off. Effort alone does not make Claude think: pass `adaptiveThinking: true` for models that support adaptive thinking (older models reject it). Thinking comes back as `reasoning` items, with the signature in `encrypted_content`, so a client that sends the item back gets the exact thinking replayed. `redacted_thinking` round-trips the same way.
 - **Sampling and limits.** `temperature` and `top_p` pass through. `max_output_tokens` becomes `max_tokens` (default 8192, because Messages requires it).
 - **Usage and service tier.** `input_tokens` includes cache reads and writes; `cached_tokens` and `cache_write_tokens` are reported. Anthropic's `speed` becomes `service_tier` (`fast` → `priority`, `slow` → `flex`).
 - **Stop reasons.** `max_tokens` → `incomplete`; refusals become a `refusal` content part.
