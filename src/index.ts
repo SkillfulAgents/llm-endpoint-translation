@@ -71,6 +71,7 @@ export {
   type ChatCompletionsResponseOptions,
 } from "./messages-to-chat/response.js";
 export {
+  CHAT_COMPLETIONS_STREAM_IDLE_TIMEOUT_MS,
   chatCompletionsStreamToMessagesStream,
   type ChatCompletionsStreamOptions,
 } from "./messages-to-chat/stream.js";

@@ -394,7 +394,7 @@ function splitToolResultContent(
  * Anthropic tools → Responses tools. Function tools are flat
  * (`{ type:"function", name, description, parameters, strict }`). The Anthropic
  * server `web_search` tool maps to the built-in `{ type:"web_search" }`.
- * `web_fetch` has no Responses equivalent — skip it (callers can reject via `hasWebFetchTool`).
+ * `web_fetch` and `code_execution` have no Responses equivalent — skip them (callers can reject web_fetch via `hasWebFetchTool`).
  */
 function convertTools(tools: unknown): Array<Record<string, unknown>> {
   if (!Array.isArray(tools)) return [];
@@ -407,8 +407,8 @@ function convertTools(tools: unknown): Array<Record<string, unknown>> {
       out.push({ type: "web_search" });
       continue;
     }
-    // No Responses hosted web_fetch; do not mis-map it to a client function.
-    if (type.startsWith("web_fetch") || name === "web_fetch") {
+    // No Responses equivalent for these server tools; do not mis-map them to client functions.
+    if (type.startsWith("web_fetch") || name === "web_fetch" || type.startsWith("code_execution")) {
       continue;
     }
     if (!name) continue;

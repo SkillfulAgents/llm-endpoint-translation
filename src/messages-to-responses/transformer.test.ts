@@ -126,6 +126,20 @@ describe("anthropicRequestToResponses", () => {
     ]);
   });
 
+  it("drops the code_execution server tool instead of sending it as a function", () => {
+    const out = anthropicRequestToResponses({
+      model: "gpt-5.5",
+      messages: [],
+      tools: [
+        { type: "code_execution_20250825", name: "code_execution" },
+        { name: "search", input_schema: { type: "object", properties: {} } },
+      ],
+    });
+    expect(out.tools).toEqual([
+      expect.objectContaining({ type: "function", name: "search" }),
+    ]);
+  });
+
   it("hasWebFetchTool detects typed and named web_fetch tools", () => {
     expect(
       hasWebFetchTool({
