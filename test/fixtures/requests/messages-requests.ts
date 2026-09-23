@@ -167,4 +167,15 @@ export const messagesRequests: Record<string, Json> = {
     tool_choice: { type: "auto" },
     messages: [{ role: "user", content: "Quick" }],
   },
+  "no parallel tool use and an is_error tool result": {
+    model: "gpt-5.5",
+    max_tokens: 64,
+    tools: [{ name: "Bash", input_schema: { type: "object", properties: { command: { type: "string" } } } }],
+    tool_choice: { type: "auto", disable_parallel_tool_use: true },
+    messages: [
+      { role: "user", content: "run it" },
+      { role: "assistant", content: [{ type: "tool_use", id: "toolu_e", name: "Bash", input: { command: "false" } }] },
+      { role: "user", content: [{ type: "tool_result", tool_use_id: "toolu_e", is_error: true, content: "exit code 1" }] },
+    ],
+  },
 };

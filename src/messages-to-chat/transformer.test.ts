@@ -997,3 +997,46 @@ describe("chatCompletionsStreamToMessagesStream — edge cases", () => {
     expect(out.at(-1)?.type).toBe("error");
   });
 });
+
+describe("anthropicRequestToChatCompletions — parallel tool use and tool errors", () => {
+  const tools = [{ name: "f", input_schema: { type: "object" } }];
+  const toolResult = (block: Record<string, unknown>) =>
+    anthropicRequestToChatCompletions({
+      model: "m",
+      messages: [{ role: "user", content: [{ type: "tool_result", tool_use_id: "t1", ...block }] }],
+    }).messages;
+
+  it.each(["auto", "any", "tool"])("sends parallel_tool_calls false for tool_choice %s with disable_parallel_tool_use", (type) => {
+    const out = anthropicRequestToChatCompletions({
+      model: "m",
+      messages: [],
+      tools,
+      tool_choice: { type, name: "f", disable_parallel_tool_use: true },
+    });
+    expect(out.parallel_tool_calls).toBe(false);
+  });
+
+  it("omits parallel_tool_calls when the flag is false, missing, or no tools are sent", () => {
+    const build = (extra: Record<string, unknown>) =>
+      anthropicRequestToChatCompletions({ model: "m", messages: [], ...extra }).parallel_tool_calls;
+    expect(build({ tools, tool_choice: { type: "auto", disable_parallel_tool_use: false } })).toBeUndefined();
+    expect(build({ tools, tool_choice: { type: "auto" } })).toBeUndefined();
+    expect(build({ tool_choice: { type: "auto", disable_parallel_tool_use: true } })).toBeUndefined();
+  });
+
+  it("marks an is_error tool result as an error in the tool message", () => {
+    expect(toolResult({ is_error: true, content: "file not found" })).toEqual([
+      { role: "tool", tool_call_id: "t1", content: "Error: file not found" },
+    ]);
+    expect(toolResult({ is_error: true, content: [] })).toEqual([{ role: "tool", tool_call_id: "t1", content: "Error" }]);
+  });
+
+  it("leaves error text that already says so, and non-error results, unchanged", () => {
+    const tagged = "<tool_use_error>File does not exist.</tool_use_error>";
+    expect(toolResult({ is_error: true, content: tagged })).toEqual([{ role: "tool", tool_call_id: "t1", content: tagged }]);
+    expect(toolResult({ is_error: true, content: "Error: exit 1" })).toEqual([
+      { role: "tool", tool_call_id: "t1", content: "Error: exit 1" },
+    ]);
+    expect(toolResult({ is_error: false, content: "ok" })).toEqual([{ role: "tool", tool_call_id: "t1", content: "ok" }]);
+  });
+});
