@@ -53,12 +53,14 @@ So the library adds 0.6 MB RSS at idle. Idle CPU was the same with and without i
 
 All 360 streams completed, and throughput matched across backends. At 50 streams, translation adds about 2 CPU percentage points and 6–10 MB peak RSS over passthrough. The ~30 MB jump from idle on the first request is Node's `fetch` warming up; passthrough shows it too.
 
-**Live Claude Code tool loop** (`claude-loop.sh`, real OpenAI upstream):
+**Live Claude Code tool loop** (`claude-loop.sh`):
 
-| Backend | Model | Result |
+| Backend | Upstream and model | Result |
 | --- | --- | --- |
-| Responses | `gpt-5.4-mini` | Bash → Read → answer, 3 streamed turns |
-| Chat Completions | `gpt-4.1-mini`, `mapReasoningEffort: () => undefined` | Bash → Read → correct answer, 3 streamed turns |
+| Responses | OpenAI `gpt-5.4-mini` | Bash → Read → answer, 3 streamed turns |
+| Chat Completions | OpenAI `gpt-4.1-mini`, `mapReasoningEffort: () => undefined` | Bash → Read → correct answer, 3 streamed turns |
+| Chat Completions | Fireworks `glm-5p3-flash`, default options | Bash → Read → correct answer, 3 streamed turns |
+| Chat Completions | Fireworks `kimi-k3`, default options | Bash → Read → correct answer, 3 streamed turns |
 
 These also worked against the real Responses upstream:
 - **Cancellation:** killing Claude mid-stream aborted the upstream request.
@@ -72,8 +74,8 @@ These also worked against the real Responses upstream:
 | Clean EOF halfway (mock) | Retried, then `Server error mid-response` | Same |
 | Connection dropped halfway (mock) | Retried, then `502 terminated` | Same |
 | In-stream error event (mock) | Upstream message shown, no retry | Retried, then generic `Server error mid-response` |
-| Kill Claude mid-stream (live) | Upstream request aborted after 83 deltas | Upstream request aborted after 66 deltas |
-| Upstream 404 unknown model (live) | Claude Code reports a model error | Same |
+| Kill Claude mid-stream (live) | Upstream request aborted after 83 deltas | Aborted after 66 deltas (OpenAI) and 64 deltas (Fireworks `glm-5p3-flash`) |
+| Upstream 404 unknown model (live) | Claude Code reports a model error | Same, on OpenAI and Fireworks |
 
 The dropped-connection case first hung Claude Code until timeout: the codecs error the output stream on an upstream read failure, and the bench proxy did not destroy the client connection. The proxy now does; any host must do the same.
 
@@ -99,7 +101,6 @@ Full feature matrix and unavailable features: [`docs/compatibility.md`](../docs/
 
 ## Not verified
 
-- Fireworks as the Chat Completions backend (needs a key).
 - Memory with the proxy embedded in the agent server process. The runs above use a separate Node process in the same image.
 - That the upstream stops generating after a cancel. The proxy does abort its upstream request.
 - Reasoning replay across different accounts.

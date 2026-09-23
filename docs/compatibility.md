@@ -5,7 +5,7 @@ What an Anthropic Messages client (Claude Code, the Claude Agent SDK, `@anthropi
 Evidence column:
 
 - **U**: unit, conformance, or recorded-fixture tests in this repo.
-- **L**: live Claude Code tool loop inside the agent container image, through `bench/` (`claude-loop.sh`, `faults.sh`, `switch.sh`), against OpenAI `gpt-5.4-mini` / `gpt-5.4` (Responses) and `gpt-4.1-mini` (Chat Completions). Results in [`bench/README.md`](../bench/README.md).
+- **L**: live Claude Code tool loop inside the agent container image, through `bench/` (`claude-loop.sh`, `faults.sh`, `switch.sh`), against OpenAI `gpt-5.4-mini` / `gpt-5.4` (Responses), and OpenAI `gpt-4.1-mini` plus Fireworks `glm-5p3-flash` / `kimi-k3` (Chat Completions). Results in [`bench/README.md`](../bench/README.md).
 - **S**: live Platform proxy on staging after the migration to this library (2026-09-23): GPT-5.5 and Grok-4.5 on Responses, GLM-5.3-Flash on Fireworks Chat Completions, plus the official `@anthropic-ai/sdk`.
 
 ## Matrix
@@ -70,7 +70,6 @@ These Anthropic features have no translation. The codec does not claim an equiva
 
 ## Not verified
 
-- Fireworks Chat Completions through Claude Code in the container (Platform staging covers Fireworks through `@anthropic-ai/sdk`).
 - Replaying encrypted reasoning across different accounts of the same vendor.
 - That an upstream stops generating after a cancel. The bench proxy does abort its upstream request.
 - Structured output, stop sequences, and effort mapping against live upstreams (unit-tested only).
