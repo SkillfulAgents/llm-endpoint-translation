@@ -10,6 +10,16 @@ Pure, dependency-free translation between the **Anthropic Messages API** and the
 
 Streams are Web Streams (`ReadableStream<Uint8Array>` of SSE bytes in, SSE bytes out) and work on Node 20+, Deno, Bun, and edge runtimes.
 
+## Install
+
+Not published to the npm registry. Each [GitHub Release](https://github.com/SkillfulAgents/llm-endpoint-translation/releases) ships a package tarball; depend on its URL (pnpm and npm pin its integrity hash in the lockfile):
+
+```sh
+pnpm add https://github.com/SkillfulAgents/llm-endpoint-translation/releases/download/v0.1.0/llm-endpoint-translation-0.1.0.tgz
+```
+
+To upgrade, point the URL at the new release and reinstall.
+
 ```ts
 import { messagesRequestToResponses, responsesStreamToMessagesStream } from "llm-endpoint-translation";
 
