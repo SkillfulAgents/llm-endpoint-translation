@@ -43,7 +43,7 @@ describe("third-party fixtures stay license-compliant", () => {
 
   it("the vendored OpenAI spec slice matches the commit its README names", () => {
     const readmeSha = read(EXTERNAL, "openai-openapi", "README.md").match(/\b[0-9a-f]{40}\b/)![0];
-    const specSha = JSON.parse(read(EXTERNAL, "openai-openapi", "responses-schemas.json")).source.sha;
+    const specSha = JSON.parse(read(EXTERNAL, "openai-openapi", "schemas.json")).source.sha;
     expect(specSha).toBe(readmeSha);
   });
 });

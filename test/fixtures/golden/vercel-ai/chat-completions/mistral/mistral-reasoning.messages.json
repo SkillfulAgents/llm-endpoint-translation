@@ -1,0 +1,15 @@
+{
+  "id": "a4e29c5b82f94d67b23e108a7c9df6e1",
+  "type": "message",
+  "role": "assistant",
+  "model": "magistral-medium-2507",
+  "content": [],
+  "stop_reason": "end_turn",
+  "stop_sequence": null,
+  "usage": {
+    "input_tokens": 10,
+    "output_tokens": 46,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0
+  }
+}

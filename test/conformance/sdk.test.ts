@@ -3,15 +3,18 @@ import OpenAI from "openai";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  chatCompletionsStreamToMessagesStream,
   messagesErrorToResponsesError,
   messagesStreamToResponsesStream,
   responsesErrorToMessagesError,
   responsesResponseToMessages,
   responsesStreamToMessagesStream,
 } from "../../src";
+import { mapFinishReason } from "../../src/messages-to-chat/response";
+import { chatSseText, chatStreams } from "../fixtures/chat-corpus";
 import { messagesStreams } from "../fixtures/messages-corpus";
 import { recordedResponsesTurns } from "../fixtures/responses-corpus";
-import { readSse, streamFromPayloads, type Json } from "../helpers/sse";
+import { encode, readSse, streamFromBytes, streamFromPayloads, type Json } from "../helpers/sse";
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ["Date"] });
@@ -60,6 +63,30 @@ describe("@anthropic-ai/sdk MessageStream consumes translated Responses streams"
     expect(final.content).toEqual(fromJson.content);
     expect(final.stop_reason).toBe(fromJson.stop_reason);
     expect(final.usage).toMatchObject(fromJson.usage as Json);
+  });
+});
+
+describe("@anthropic-ai/sdk MessageStream consumes translated Chat Completions streams", () => {
+  it.each(chatStreams)("$vendor/$name", async ({ chunks }) => {
+    const client = anthropicClient(() => ({
+      body: chatCompletionsStreamToMessagesStream(streamFromBytes(encode(chatSseText(chunks)), [53])),
+      contentType: sse,
+    }));
+    const stream = client.messages.stream({ model: "m", max_tokens: 1024, messages: [{ role: "user", content: "x" }] });
+    const choices = chunks.flatMap((chunk) => (Array.isArray(chunk.choices) ? (chunk.choices as Json[]) : []));
+    const finish = choices.find((choice) => choice.finish_reason != null)?.finish_reason;
+
+    if (finish == null) {
+      await expect(stream.finalMessage()).rejects.toThrow();
+      return;
+    }
+    const final = await stream.finalMessage();
+    const deltas = choices.map((choice) => (choice.delta ?? {}) as Json);
+    const text = final.content.flatMap((block) => (block.type === "text" ? [block.text] : [])).join("");
+    expect(text).toBe(deltas.map((d) => (typeof d.content === "string" ? d.content : "")).join(""));
+    const toolIds = deltas.flatMap((d) => ((d.tool_calls ?? []) as Json[]).flatMap((c) => (c.id ? [c.id] : [])));
+    expect(final.content.flatMap((block) => (block.type === "tool_use" ? [block.id] : []))).toEqual(toolIds);
+    expect(final.stop_reason).toBe(mapFinishReason(finish, toolIds.length > 0));
   });
 });
 

@@ -29,6 +29,7 @@ const required = [
   "messagesRequestToResponses", "responsesResponseToMessages", "responsesStreamToMessagesStream",
   "responsesErrorToMessagesError", "responsesRequestToMessages", "messagesResponseToResponses",
   "messagesStreamToResponsesStream", "messagesErrorToResponsesError", "TranslationError",
+  "messagesRequestToChatCompletions", "chatCompletionsResponseToMessages", "chatCompletionsStreamToMessagesStream",
 ];
 const missing = required.filter((name) => typeof lib[name] !== "function");
 if (missing.length) throw new Error("missing exports: " + missing.join(", "));

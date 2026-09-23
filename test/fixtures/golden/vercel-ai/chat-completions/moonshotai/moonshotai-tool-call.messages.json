@@ -1,0 +1,24 @@
+{
+  "id": "chatcmpl-test-tool",
+  "type": "message",
+  "role": "assistant",
+  "model": "kimi-k3",
+  "content": [
+    {
+      "type": "tool_use",
+      "id": "call_abc123",
+      "name": "get_weather",
+      "input": {
+        "city": "Paris"
+      }
+    }
+  ],
+  "stop_reason": "tool_use",
+  "stop_sequence": null,
+  "usage": {
+    "input_tokens": 30,
+    "output_tokens": 12,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0
+  }
+}

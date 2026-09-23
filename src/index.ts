@@ -58,3 +58,19 @@ export {
   messagesStreamToResponsesStream,
   type MessagesStreamOptions,
 } from "./responses-to-messages/stream.js";
+
+// Messages -> Chat Completions: an Anthropic client talking to a Chat Completions upstream.
+export {
+  mapChatReasoningEffort,
+  messagesRequestToChatCompletions,
+  type ChatCompletionsRequestOptions,
+} from "./messages-to-chat/request.js";
+export {
+  chatCompletionsResponseToMessages,
+  extractChatCompletionsUsage,
+  type ChatCompletionsResponseOptions,
+} from "./messages-to-chat/response.js";
+export {
+  chatCompletionsStreamToMessagesStream,
+  type ChatCompletionsStreamOptions,
+} from "./messages-to-chat/stream.js";

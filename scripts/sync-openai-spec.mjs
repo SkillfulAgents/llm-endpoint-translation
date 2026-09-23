@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Vendors the Responses slice of OpenAI's official OpenAPI spec for conformance tests.
+// Vendors the Responses and Chat Completions slice of OpenAI's official OpenAPI spec for conformance tests.
 // Usage: node scripts/sync-openai-spec.mjs [ref]   (default: the pinned sha; "main" for drift checks)
 
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -7,9 +7,15 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const REPO = "openai/openai-openapi";
-const ROOTS = ["Response", "CreateResponse", "ResponseStreamEvent", "ErrorResponse"];
+const ROOTS = [
+  "Response",
+  "CreateResponse",
+  "ResponseStreamEvent",
+  "ErrorResponse",
+  "CreateChatCompletionRequest",
+];
 const OUT_DIR = join(dirname(fileURLToPath(import.meta.url)), "../test/fixtures/external/openai-openapi");
-const OUT = join(OUT_DIR, "responses-schemas.json");
+const OUT = join(OUT_DIR, "schemas.json");
 
 async function get(url) {
   const res = await fetch(url, { headers: { "user-agent": "llm-endpoint-translation-spec-sync" } });
@@ -76,7 +82,7 @@ writeFileSync(
 writeFileSync(join(OUT_DIR, "LICENSE"), license);
 writeFileSync(
   join(OUT_DIR, "README.md"),
-  `# OpenAI OpenAPI spec (Responses slice)
+  `# OpenAI OpenAPI spec (Responses and Chat Completions slice)
 
 Derived from \`openapi.json\` in [${REPO}](https://github.com/${REPO}) at commit
 \`${sha}\`, Copyright (c) OpenAI, MIT License (see \`LICENSE\`).

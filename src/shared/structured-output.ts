@@ -38,6 +38,20 @@ export function toResponsesTextFormat(
   };
 }
 
+/** OpenAI-compat Chat Completions: `response_format`. */
+export function toChatResponseFormat(
+  format: JsonSchemaFormat,
+): Record<string, unknown> {
+  return {
+    type: "json_schema",
+    json_schema: {
+      name: format.name,
+      strict: format.strict,
+      schema: format.schema,
+    },
+  };
+}
+
 function schemaName(raw: unknown): string {
   if (typeof raw !== "string") return DEFAULT_SCHEMA_NAME;
   const cleaned = raw.replace(SCHEMA_NAME_RE, "_").replace(/^_+|_+$/g, "").slice(0, 64);

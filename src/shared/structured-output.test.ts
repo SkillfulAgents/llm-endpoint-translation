@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   readAnthropicJsonSchemaFormat,
+  toChatResponseFormat,
   toResponsesTextFormat,
 } from "./structured-output.js";
 
@@ -55,12 +56,19 @@ describe("readAnthropicJsonSchemaFormat", () => {
   });
 });
 
-describe("toResponsesTextFormat", () => {
+describe("vendor format builders", () => {
   const format = { name: "response", schema: SCHEMA, strict: true };
 
   it("builds Responses text.format", () => {
     expect(toResponsesTextFormat(format)).toEqual({
       format: { type: "json_schema", name: "response", schema: SCHEMA, strict: true },
+    });
+  });
+
+  it("builds Chat Completions response_format", () => {
+    expect(toChatResponseFormat(format)).toEqual({
+      type: "json_schema",
+      json_schema: { name: "response", strict: true, schema: SCHEMA },
     });
   });
 });

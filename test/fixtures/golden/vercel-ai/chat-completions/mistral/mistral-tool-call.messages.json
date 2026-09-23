@@ -1,0 +1,24 @@
+{
+  "id": "b3999b8c93e04e11bcbff7bcab829667",
+  "type": "message",
+  "role": "assistant",
+  "model": "mistral-small-latest",
+  "content": [
+    {
+      "type": "tool_use",
+      "id": "gSIMJiOkT",
+      "name": "weather",
+      "input": {
+        "location": "San Francisco"
+      }
+    }
+  ],
+  "stop_reason": "tool_use",
+  "stop_sequence": null,
+  "usage": {
+    "input_tokens": 124,
+    "output_tokens": 22,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0
+  }
+}

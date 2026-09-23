@@ -11,6 +11,12 @@ ships no `NOTICE` file.
 | `openai/` | `packages/openai/src/responses/__fixtures__/` | OpenAI Responses |
 | `xai/` | `packages/xai/src/responses/__fixtures__/` | xAI Responses |
 | `anthropic/` | `packages/anthropic/src/__fixtures__/` | Anthropic Messages |
+| `chat-completions/openai/` | `packages/openai/src/chat/__fixtures__/` | OpenAI Chat Completions |
+| `chat-completions/deepseek/` | `packages/deepseek/src/chat/__fixtures__/` | DeepSeek Chat Completions |
+| `chat-completions/groq/` | `packages/groq/src/__fixtures__/` | Groq Chat Completions |
+| `chat-completions/moonshotai/` | `packages/moonshotai/src/__fixtures__/` | Moonshot AI Chat Completions |
+| `chat-completions/mistral/` | `packages/mistral/src/__fixtures__/` | Mistral Chat Completions |
+| `chat-completions/openai-compatible/` | `packages/openai-compatible/src/chat/__fixtures__/` | OpenAI-compatible Chat Completions |
 
 `*.chunks.txt` holds one SSE event payload (the `data:` JSON) per line. `*.json` holds a
 non-streaming response body, or an error envelope for `*-error.*`.

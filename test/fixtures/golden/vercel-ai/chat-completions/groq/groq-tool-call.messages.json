@@ -1,0 +1,22 @@
+{
+  "id": "chatcmpl-1fd017fc-60b8-44eb-a736-375b8e1bc3e7",
+  "type": "message",
+  "role": "assistant",
+  "model": "llama-3.3-70b-versatile",
+  "content": [
+    {
+      "type": "tool_use",
+      "id": "ax9fskhev",
+      "name": "weather",
+      "input": {}
+    }
+  ],
+  "stop_reason": "tool_use",
+  "stop_sequence": null,
+  "usage": {
+    "input_tokens": 218,
+    "output_tokens": 15,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0
+  }
+}

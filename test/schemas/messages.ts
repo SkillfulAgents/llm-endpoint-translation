@@ -72,7 +72,8 @@ export const messagesStreamEvent = z.discriminatedUnion("type", [
     content_block: z.discriminatedUnion("type", [
       z.strictObject({ type: z.literal("text"), text: z.literal("") }),
       z.strictObject({ type: z.literal("tool_use"), id: z.string(), name: z.string(), input: z.strictObject({}) }),
-      z.strictObject({ type: z.literal("thinking"), thinking: z.literal("") }),
+      // Anthropic's own stream starts thinking blocks as {thinking: "", signature: ""}.
+      z.strictObject({ type: z.literal("thinking"), thinking: z.literal(""), signature: z.literal("").optional() }),
     ]),
   }),
   z.strictObject({
