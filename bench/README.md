@@ -91,7 +91,7 @@ The dropped-connection case first hung Claude Code until timeout: the codecs err
 
 Text and tool history survive every hop, and scope isolation works as designed. Step 4 shows OpenAI accepts another model's reasoning within the same account, so the scope matters for cross-account replay, which this run could not test (one key).
 
-Full feature matrix and unavailable features: [`docs/compatibility.md`](../docs/compatibility.md).
+Full feature matrix and unavailable features: [Compatibility in the README](../README.md#compatibility).
 
 ## Compatibility findings
 
