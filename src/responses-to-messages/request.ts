@@ -54,7 +54,8 @@ export function responsesRequestToMessages(
   }
   const format = asRecord(asRecord(body.text)?.format);
   if (format?.type === "json_schema") {
-    outputConfig.format = { type: "json_schema", name: format.name, schema: format.schema };
+    // Anthropic rejects extra keys here ("output_config.format.name: Extra inputs are not permitted").
+    outputConfig.format = { type: "json_schema", schema: format.schema };
   } else if (format && format.type !== "text") {
     throw unsupported(`text.format type '${String(format.type)}' is not supported`);
   }

@@ -97,7 +97,7 @@ describe("responsesRequestToMessages", () => {
     });
     expect(out.output_config).toEqual({
       effort: "high",
-      format: { type: "json_schema", name: "r", schema: { type: "object" } },
+      format: { type: "json_schema", schema: { type: "object" } },
     });
   });
 
