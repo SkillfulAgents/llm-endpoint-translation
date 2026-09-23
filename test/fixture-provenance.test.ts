@@ -3,29 +3,48 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
+const ROOT = join(import.meta.dirname, "..");
 const EXTERNAL = join(import.meta.dirname, "fixtures/external");
 const GOLDEN = join(import.meta.dirname, "fixtures/golden");
 
 const sources = readdirSync(EXTERNAL).filter((name) => statSync(join(EXTERNAL, name)).isDirectory());
+const read = (...parts: string[]) => readFileSync(join(...parts), "utf8");
 
-describe("third-party fixtures keep their provenance", () => {
+describe("third-party fixtures stay license-compliant", () => {
   it("has at least one vendored source", () => {
     expect(sources.length).toBeGreaterThan(0);
   });
 
   it.each(sources)("%s ships its upstream LICENSE", (source) => {
-    const license = join(EXTERNAL, source, "LICENSE");
-    expect(existsSync(license)).toBe(true);
-    expect(readFileSync(license, "utf8")).toMatch(/Apache License|MIT License/);
+    expect(read(EXTERNAL, source, "LICENSE")).toMatch(/Apache License|MIT License/);
   });
 
-  it.each(sources)("%s pins an upstream commit", (source) => {
-    const dir = join(EXTERNAL, source);
-    const readme = join(dir, "README.md");
-    const pinned = existsSync(readme)
-      ? readFileSync(readme, "utf8")
-      : JSON.stringify(JSON.parse(readFileSync(join(dir, "responses-schemas.json"), "utf8")).source);
-    expect(pinned).toMatch(/\b[0-9a-f]{40}\b/);
+  // Apache-2.0 §4(a): recipients get a copy of the License itself, not just the short header.
+  it.each(sources)("%s includes the full Apache-2.0 text when Apache-licensed", (source) => {
+    if (!read(EXTERNAL, source, "LICENSE").includes("Apache License")) return;
+    const full = readdirSync(join(EXTERNAL, source)).some((file) =>
+      read(EXTERNAL, source, file).includes("TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION"),
+    );
+    expect(full).toBe(true);
+  });
+
+  it.each(sources)("%s README pins the upstream commit and states whether files were modified", (source) => {
+    const readme = read(EXTERNAL, source, "README.md");
+    expect(readme).toMatch(/\b[0-9a-f]{40}\b/);
+    expect(readme).toMatch(/unmodified|byte-identical|Modified/i);
+  });
+
+  it.each(sources)("%s is listed in THIRD_PARTY_NOTICES.md with the same commit", (source) => {
+    const notices = read(ROOT, "THIRD_PARTY_NOTICES.md");
+    const sha = read(EXTERNAL, source, "README.md").match(/\b[0-9a-f]{40}\b/)![0];
+    expect(notices).toContain(`test/fixtures/external/${source}/`);
+    expect(notices).toContain(sha);
+  });
+
+  it("the vendored OpenAI spec slice matches the commit its README names", () => {
+    const readmeSha = read(EXTERNAL, "openai-openapi", "README.md").match(/\b[0-9a-f]{40}\b/)![0];
+    const specSha = JSON.parse(read(EXTERNAL, "openai-openapi", "responses-schemas.json")).source.sha;
+    expect(specSha).toBe(readmeSha);
   });
 });
 

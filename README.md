@@ -45,4 +45,4 @@ npx vitest run -u      # regenerate goldens after an intended output change; rev
 
 ## License
 
-MIT. Vendored test fixtures keep their upstream licenses (see each `test/fixtures/external/*/LICENSE`).
+MIT. Vendored test fixtures keep their upstream licenses; see [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).

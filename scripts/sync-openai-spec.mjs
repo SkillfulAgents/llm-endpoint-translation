@@ -74,4 +74,21 @@ writeFileSync(
   JSON.stringify({ source: { repo: REPO, sha, openapi: spec.openapi, roots: ROOTS }, schemas }, null, 1) + "\n",
 );
 writeFileSync(join(OUT_DIR, "LICENSE"), license);
+writeFileSync(
+  join(OUT_DIR, "README.md"),
+  `# OpenAI OpenAPI spec (Responses slice)
+
+Derived from \`openapi.json\` in [${REPO}](https://github.com/${REPO}) at commit
+\`${sha}\`, Copyright (c) OpenAI, MIT License (see \`LICENSE\`).
+
+**Modified** by \`scripts/sync-openai-spec.mjs\`; not a verbatim copy:
+
+- Only \`components.schemas\` reachable from ${ROOTS.map((r) => `\`${r}\``).join(", ")} are kept.
+- OpenAPI \`nullable: true\` is rewritten to JSON Schema (\`type: [T, "null"]\` or \`anyOf\` with \`null\`).
+- \`oneOf\` is rewritten to \`anyOf\` (the spec's unions overlap).
+- \`example\` / \`examples\` keywords are dropped.
+
+Used only by the conformance tests; not shipped in the package.
+`,
+);
 console.log(`openai-openapi@${sha}: ${Object.keys(schemas).length} schemas -> ${OUT}`);
