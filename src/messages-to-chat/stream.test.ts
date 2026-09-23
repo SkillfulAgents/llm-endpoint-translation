@@ -129,6 +129,18 @@ describe("chatCompletionsStreamToMessagesStream", () => {
     expect(cancelled).toBe("client gone");
   });
 
+  it("does not report a consumer cancel as an abnormal end", async () => {
+    const reasons: string[] = [];
+    const input = new ReadableStream<Uint8Array>({
+      pull() {
+        return new Promise(() => {});
+      },
+    });
+    await chatCompletionsStreamToMessagesStream(input, { onAbnormalEnd: (r) => reasons.push(r) }).cancel("client gone");
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(reasons).toEqual([]);
+  });
+
   it("ends a stalled stream after the idle timeout with a retryable error and cancels the upstream", async () => {
     const reasons: string[] = [];
     let cancelled = false;

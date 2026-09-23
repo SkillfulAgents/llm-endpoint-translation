@@ -28,6 +28,8 @@ export function chatCompletionsStreamToMessagesStream(
   const state = new ChatTranslatorState(canonicalModel, options?.toolNames);
   const reader = input.getReader();
   let lineBuffer = "";
+  // A client cancel ends the upstream read too; that is not an upstream fault.
+  let cancelled = false;
 
   return new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -50,6 +52,7 @@ export function chatCompletionsStreamToMessagesStream(
           for (const line of lines) handleLine(line, state);
           flush();
         }
+        if (cancelled) return;
         if (!stalled && lineBuffer.length > 0) handleLine(lineBuffer, state);
         // A finish_reason arrived but the trailing usage-only chunk never
         // did — still a complete turn, close it normally with zero usage.
@@ -71,6 +74,7 @@ export function chatCompletionsStreamToMessagesStream(
       }
     },
     cancel(reason) {
+      cancelled = true;
       return reader.cancel(reason);
     },
   });
