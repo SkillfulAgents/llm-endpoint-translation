@@ -61,9 +61,11 @@ export function mapFinishReason(
   sawToolCall: boolean,
   sawRefusal = false,
 ): "tool_use" | "max_tokens" | "end_turn" | "refusal" {
-  if (finish === "tool_calls" || sawToolCall) return "tool_use";
+  // A cut-off tool call carries partial arguments; `tool_use` would get it executed.
   if (finish === "length") return "max_tokens";
-  if (finish === "content_filter" || sawRefusal) return "refusal";
+  if (finish === "content_filter") return "refusal";
+  if (finish === "tool_calls" || sawToolCall) return "tool_use";
+  if (sawRefusal) return "refusal";
   return "end_turn";
 }
 

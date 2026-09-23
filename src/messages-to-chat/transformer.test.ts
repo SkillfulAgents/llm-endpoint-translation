@@ -306,6 +306,23 @@ describe("chatCompletionsResponseToAnthropic", () => {
     expect(out.content).toEqual([]);
     expect(out.stop_reason).toBe("max_tokens");
   });
+
+  it("reports max_tokens, not tool_use, for a tool call cut off by finish_reason length", () => {
+    const out = chatCompletionsResponseToAnthropic({
+      id: "c",
+      choices: [
+        {
+          finish_reason: "length",
+          message: {
+            tool_calls: [
+              { id: "t1", type: "function", function: { name: "Write", arguments: '{"file_path":"/a.md","content":"# Riv' } },
+            ],
+          },
+        },
+      ],
+    });
+    expect(out.stop_reason).toBe("max_tokens");
+  });
 });
 
 describe("translateChatUsage", () => {
@@ -958,6 +975,18 @@ describe("chatCompletionsStreamToMessagesStream — edge cases", () => {
       cache_creation_input_tokens: 0,
       cache_read_input_tokens: 1,
     });
+  });
+
+  it("reports max_tokens, not tool_use, for a streamed tool call cut off by finish_reason length", async () => {
+    const body = [
+      line({ id: "c", model: "m", choices: [{ index: 0, delta: { tool_calls: [{ index: 0, id: "t1", function: { name: "Write", arguments: '{"content":"# Riv' } }] } }] }),
+      line({ id: "c", model: "m", choices: [{ index: 0, delta: {}, finish_reason: "length" }], usage }),
+      "data: [DONE]",
+      "",
+    ].join("\n\n");
+    const out = await frames(chatCompletionsStreamToMessagesStream(text(body)));
+    const messageDelta = out.find((f) => f.type === "message_delta") as { delta: Record<string, unknown> };
+    expect(messageDelta.delta.stop_reason).toBe("max_tokens");
   });
 
   it("assembles tool arguments split across chunks into one input_json stream", async () => {
