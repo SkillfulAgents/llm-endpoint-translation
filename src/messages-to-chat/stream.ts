@@ -91,7 +91,12 @@ function handleLine(rawLine: string, state: ChatTranslatorState): void {
 }
 
 type OpenBlock = { index: number; kind: "thinking" | "text" | "tool_use" };
+type ToolCall = { id: string; name: string; args: string };
+type Deferred = { kind: "tool_use"; callIndex: number } | { kind: "thinking" | "text"; text: string };
 
+// Messages streams carry one open block at a time. Chat interleaves parallel tool-call
+// arguments, so only the first call streams live; later calls and any content after them are
+// buffered and emitted in order once the live block closes.
 class ChatTranslatorState {
   private pending: string[] = [];
   private startedMessage = false;
@@ -103,12 +108,11 @@ class ChatTranslatorState {
   private sawToolCall = false;
   private sawRefusal = false;
   private nextIndex = 0;
-  // Currently-open text/thinking block (at most one of each kind at a time).
-  private openText: OpenBlock | null = null;
-  private openThinking: OpenBlock | null = null;
+  private live: OpenBlock | null = null;
+  private liveCallIndex: number | null = null;
   // Chat tool_calls are keyed by their array index within the delta.
-  private toolBlocks = new Map<number, OpenBlock>();
-  private stopped = new Set<number>();
+  private toolCalls = new Map<number, ToolCall>();
+  private deferred: Deferred[] = [];
 
   constructor(
     private readonly canonicalModel?: string,
@@ -199,67 +203,64 @@ class ChatTranslatorState {
   }
 
   private emitThinkingDelta(text: string): void {
-    if (!this.openThinking) {
-      this.openThinking = this.openBlock("thinking", {
-        type: "thinking",
-        thinking: "",
-        signature: "",
-      });
-    }
-    this.pending.push(
-      sseEvent("content_block_delta", {
-        type: "content_block_delta",
-        index: this.openThinking.index,
-        delta: { type: "thinking_delta", thinking: text },
-      }),
-    );
+    this.emitContentDelta("thinking", text);
   }
 
   private emitTextDelta(text: string): void {
-    // Reasoning precedes text; close the thinking block once text starts.
-    this.closeBlock(this.openThinking);
-    this.openThinking = null;
-    if (!this.openText) {
-      this.openText = this.openBlock("text", { type: "text", text: "" });
+    this.emitContentDelta("text", text);
+  }
+
+  private emitContentDelta(kind: "thinking" | "text", text: string): void {
+    if (this.sawToolCall) {
+      const last = this.deferred.at(-1);
+      if (last && last.kind === kind) last.text += text;
+      else this.deferred.push({ kind, text });
+      return;
     }
-    this.pending.push(
-      sseEvent("content_block_delta", {
-        type: "content_block_delta",
-        index: this.openText.index,
-        delta: { type: "text_delta", text },
-      }),
-    );
+    if (this.live?.kind !== kind) {
+      this.closeLive();
+      this.live = this.openBlock(kind, contentBlockStart(kind));
+    }
+    this.pushDelta(this.live.index, kind, text);
   }
 
   // Some vendors omit `index`; parallel calls are then told apart by their position in the delta.
   private emitToolCallDelta(call: Record<string, unknown>, position: number): void {
     const callIndex = typeof call.index === "number" ? call.index : position;
     const fn = (call.function ?? {}) as Record<string, unknown>;
-    let block = this.toolBlocks.get(callIndex);
-    if (!block) {
-      // Text/thinking never interleave after tool calls start on this wire.
-      this.closeBlock(this.openThinking);
-      this.openThinking = null;
-      this.closeBlock(this.openText);
-      this.openText = null;
-      this.sawToolCall = true;
-      block = this.openBlock("tool_use", {
-        type: "tool_use",
+    let toolCall = this.toolCalls.get(callIndex);
+    if (!toolCall) {
+      toolCall = {
         id: typeof call.id === "string" ? call.id : `call_${callIndex}`,
         name: typeof fn.name === "string" ? restoreToolName(fn.name, this.toolNames) : "",
-        input: {},
-      });
-      this.toolBlocks.set(callIndex, block);
+        args: "",
+      };
+      this.toolCalls.set(callIndex, toolCall);
+      if (this.sawToolCall) {
+        this.deferred.push({ kind: "tool_use", callIndex });
+      } else {
+        this.sawToolCall = true;
+        this.closeLive();
+        this.live = this.openBlock("tool_use", toolUseStart(toolCall));
+        this.liveCallIndex = callIndex;
+      }
     }
-    if (typeof fn.arguments === "string" && fn.arguments) {
-      this.pending.push(
-        sseEvent("content_block_delta", {
-          type: "content_block_delta",
-          index: block.index,
-          delta: { type: "input_json_delta", partial_json: fn.arguments },
-        }),
-      );
+    if (typeof fn.arguments !== "string" || !fn.arguments) return;
+    if (this.live && callIndex === this.liveCallIndex) {
+      this.pushDelta(this.live.index, "tool_use", fn.arguments);
+    } else {
+      toolCall.args += fn.arguments;
     }
+  }
+
+  private pushDelta(index: number, kind: OpenBlock["kind"], text: string): void {
+    const delta =
+      kind === "tool_use"
+        ? { type: "input_json_delta", partial_json: text }
+        : kind === "thinking"
+          ? { type: "thinking_delta", thinking: text }
+          : { type: "text_delta", text };
+    this.pending.push(sseEvent("content_block_delta", { type: "content_block_delta", index, delta }));
   }
 
   private openBlock(
@@ -277,20 +278,40 @@ class ChatTranslatorState {
     return { index, kind };
   }
 
-  private closeBlock(block: OpenBlock | null): void {
-    if (!block || this.stopped.has(block.index)) return;
-    this.stopped.add(block.index);
-    this.pending.push(
-      sseEvent("content_block_stop", { type: "content_block_stop", index: block.index }),
-    );
+  private closeBlock(index: number): void {
+    this.pending.push(sseEvent("content_block_stop", { type: "content_block_stop", index }));
+  }
+
+  private closeLive(): void {
+    if (!this.live) return;
+    this.closeBlock(this.live.index);
+    this.live = null;
+    this.liveCallIndex = null;
+  }
+
+  private closeAllBlocks(): void {
+    this.closeLive();
+    for (const item of this.deferred) {
+      if (item.kind === "tool_use") {
+        const toolCall = this.toolCalls.get(item.callIndex)!;
+        this.emitWholeBlock("tool_use", toolUseStart(toolCall), toolCall.args);
+      } else {
+        this.emitWholeBlock(item.kind, contentBlockStart(item.kind), item.text);
+      }
+    }
+    this.deferred = [];
+  }
+
+  private emitWholeBlock(kind: OpenBlock["kind"], contentBlock: Record<string, unknown>, text: string): void {
+    const block = this.openBlock(kind, contentBlock);
+    if (text) this.pushDelta(block.index, kind, text);
+    this.closeBlock(block.index);
   }
 
   finish(): void {
     if (this.finishedMessage) return;
     if (!this.startedMessage) this.emitMessageStart();
-    this.closeBlock(this.openThinking);
-    this.closeBlock(this.openText);
-    for (const block of this.toolBlocks.values()) this.closeBlock(block);
+    this.closeAllBlocks();
     this.pending.push(
       sseEvent("message_delta", {
         type: "message_delta",
@@ -312,9 +333,7 @@ class ChatTranslatorState {
 
   finishAbnormally(message: string, type = "overloaded_error"): void {
     if (this.finishedMessage) return;
-    this.closeBlock(this.openThinking);
-    this.closeBlock(this.openText);
-    for (const block of this.toolBlocks.values()) this.closeBlock(block);
+    this.closeAllBlocks();
     this.pending.push(
       sseEvent("error", {
         type: "error",
@@ -329,6 +348,14 @@ class ChatTranslatorState {
     this.pending = [];
     return out;
   }
+}
+
+function contentBlockStart(kind: "thinking" | "text"): Record<string, unknown> {
+  return kind === "thinking" ? { type: "thinking", thinking: "", signature: "" } : { type: "text", text: "" };
+}
+
+function toolUseStart(call: ToolCall): Record<string, unknown> {
+  return { type: "tool_use", id: call.id, name: call.name, input: {} };
 }
 
 function sseEvent(eventName: string, data: unknown): string {

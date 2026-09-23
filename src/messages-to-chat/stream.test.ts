@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
 
+import { assertMessagesStreamGrammar } from "../../test/helpers/grammar.js";
+import { parseSse, readText } from "../../test/helpers/sse.js";
+import type { MessagesStreamEvent } from "../../test/schemas/messages.js";
 import { chatCompletionsStreamToMessagesStream } from "./stream.js";
 
 type Json = Record<string, unknown>;
@@ -198,5 +201,86 @@ describe("chatCompletionsStreamToMessagesStream", () => {
 
     expect(events.map((e) => e.type)).toEqual(["message_start", "error"]);
     expect(events.at(-1)).toEqual({ type: "error", error: { type: "rate_limit_error", message: "slow down" } });
+  });
+});
+
+describe("chatCompletionsStreamToMessagesStream — one open block at a time", () => {
+  const usage = { prompt_tokens: 1, completion_tokens: 1 };
+  const chunk = (delta: Json, extra: Json = {}) => ({ id: "c1", model: "m", choices: [{ index: 0, delta, ...extra }] });
+  const sequential = async (chunks: Json[], truncated = false) => {
+    const body = chunks.map((c) => `data: ${JSON.stringify(c)}\n\n`).join("") + (truncated ? "" : "data: [DONE]\n\n");
+    const text = await readText(chatCompletionsStreamToMessagesStream(new Response(body).body!));
+    return assertMessagesStreamGrammar(parseSse(text));
+  };
+  const blocks = (events: MessagesStreamEvent[]) => {
+    const out: Array<{ type: string; body: string }> = [];
+    for (const e of events) {
+      if (e.type === "content_block_start") out.push({ type: e.content_block.type, body: "" });
+      if (e.type === "content_block_delta") {
+        const d = e.delta as { text?: string; thinking?: string; partial_json?: string };
+        out[e.index].body += d.text ?? d.thinking ?? d.partial_json ?? "";
+      }
+    }
+    return out;
+  };
+
+  it("closes the text block before reasoning that arrives after it", async () => {
+    const events = await sequential([
+      chunk({ content: "Hi." }),
+      chunk({ reasoning_content: "Now think." }),
+      chunk({ content: " Done." }, { finish_reason: "stop", usage }),
+    ]);
+    expect(blocks(events)).toEqual([
+      { type: "text", body: "Hi." },
+      { type: "thinking", body: "Now think." },
+      { type: "text", body: " Done." },
+    ]);
+  });
+
+  it("emits text that arrives after a tool call as its own block after the tool call", async () => {
+    const events = await sequential([
+      chunk({ tool_calls: [{ index: 0, id: "a", function: { name: "f", arguments: '{"x":' } }] }),
+      chunk({ content: "while calling" }),
+      chunk({ tool_calls: [{ index: 0, function: { arguments: "1}" } }] }, { finish_reason: "tool_calls", usage }),
+    ]);
+    expect(blocks(events)).toEqual([
+      { type: "tool_use", body: '{"x":1}' },
+      { type: "text", body: "while calling" },
+    ]);
+  });
+
+  it("keeps interleaved parallel tool-call arguments with their own call", async () => {
+    const events = await sequential([
+      chunk({ tool_calls: [{ index: 0, id: "a", function: { name: "weather", arguments: '{"city":' } }] }),
+      chunk({ tool_calls: [{ index: 1, id: "b", function: { name: "time", arguments: '{"tz":' } }] }),
+      chunk({ tool_calls: [{ index: 0, function: { arguments: '"SF"}' } }] }),
+      chunk({ tool_calls: [{ index: 1, function: { arguments: '"UTC"}' } }] }),
+      chunk({ tool_calls: [{ index: 2, id: "c", function: { name: "noop" } }] }, { finish_reason: "tool_calls", usage }),
+    ]);
+    expect(toolCalls(events)).toEqual([
+      { id: "a", name: "weather", args: '{"city":"SF"}' },
+      { id: "b", name: "time", args: '{"tz":"UTC"}' },
+      { id: "c", name: "noop", args: "" },
+    ]);
+  });
+
+  it("flushes buffered tool calls before the error on a truncated stream", async () => {
+    const events = await sequential(
+      [
+        chunk({ tool_calls: [{ index: 0, id: "a", function: { name: "f", arguments: "{}" } }] }),
+        chunk({ tool_calls: [{ index: 1, id: "b", function: { name: "g", arguments: '{"p' } }] }),
+      ],
+      true,
+    );
+    expect(events.map((e) => e.type)).toEqual([
+      "message_start",
+      "content_block_start",
+      "content_block_delta",
+      "content_block_stop",
+      "content_block_start",
+      "content_block_delta",
+      "content_block_stop",
+      "error",
+    ]);
   });
 });
