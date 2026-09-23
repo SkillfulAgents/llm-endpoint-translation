@@ -206,7 +206,7 @@ class ResponsesTranslatorState {
       // ended as a fabricated clean end_turn.
       case "error":
         this.emitErrorAndFinish(
-          "openai_response_failed",
+          streamErrorType(event.code),
           typeof event.message === "string"
             ? event.message
             : "Upstream model reported a stream error",
@@ -477,7 +477,7 @@ class ResponsesTranslatorState {
       typeof error?.message === "string"
         ? error.message
         : "OpenAI response failed";
-    this.emitErrorAndFinish("openai_response_failed", message);
+    this.emitErrorAndFinish(streamErrorType(error?.code), message);
   }
 
   // Stalled / truncated stream. `overloaded_error` is Anthropic's standard
@@ -503,6 +503,14 @@ class ResponsesTranslatorState {
     this.pending = [];
     return out;
   }
+}
+
+// Transient upstream codes map to types Anthropic clients retry; anything else stays
+// non-retryable so the upstream message is shown as-is.
+function streamErrorType(code: unknown): string {
+  if (code === "server_error") return "api_error";
+  if (code === "rate_limit_exceeded") return "rate_limit_error";
+  return "openai_response_failed";
 }
 
 function sseEvent(eventName: string, data: unknown): string {

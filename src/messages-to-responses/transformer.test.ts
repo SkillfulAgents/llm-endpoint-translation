@@ -940,6 +940,20 @@ describe("responsesSSEToAnthropicSSE", () => {
     expect(out).not.toContain("event: message_stop");
   });
 
+  it.each([
+    ["server_error", "api_error"],
+    ["rate_limit_exceeded", "rate_limit_error"],
+  ])("maps a transient %s failure to the retryable %s type", async (code, type) => {
+    for (const failure of [
+      { type: "response.failed", response: { error: { code, message: "try again" } } },
+      { type: "error", code, message: "try again" },
+    ]) {
+      const source = sourceFrom([{ type: "response.created", response: { id: "r", model: "gpt-5.5" } }, failure]);
+      const out = await collect(responsesSSEToAnthropicSSE(source));
+      expect(out).toContain(`"error":{"type":"${type}","message":"try again"}`);
+    }
+  });
+
   it("surfaces an empty stream (no terminal event) as a retryable error, not a silent success", async () => {
     const out = await collect(responsesSSEToAnthropicSSE(sourceFrom([])));
     expect(out).toContain("event: error");
@@ -989,7 +1003,7 @@ describe("responsesSSEToAnthropicSSE", () => {
   it("translates a top-level error SSE event into an error frame instead of swallowing it", async () => {
     const source = sourceFrom([
       { type: "response.created", response: { id: "r", model: "grok-4.6" } },
-      { type: "error", code: "server_error", message: "The server had an error" },
+      { type: "error", code: "invalid_prompt", message: "The server had an error" },
     ]);
     const out = await collect(responsesSSEToAnthropicSSE(source));
     expect(out).toContain("event: error");

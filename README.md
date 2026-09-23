@@ -38,7 +38,7 @@ An Anthropic client (Claude Code, the Claude Agent SDK, `@anthropic-ai/sdk`) tal
 - **Stop reasons.** `tool_use`, `end_turn`, `incomplete` → `max_tokens`, and refusals → `refusal` (refusal text becomes normal text).
 - **Service tier.** `serviceTier` out; `onServiceTier` and `usage.speed` report what was served.
 - **HTTP errors.** The OpenAI error body becomes an Anthropic error body with a matching type, so SDKs raise the right error class.
-- **Errors inside the stream** become a Messages `error` event. Claude Code shows the upstream message without retrying.
+- **Errors inside the stream** become a Messages `error` event. Transient `server_error` and `rate_limit_exceeded` become `api_error` and `rate_limit_error`, which clients retry; any other failure keeps the upstream message and is not retried.
 - **Broken streams.** A stream that ends without finishing, or stalls for `idleTimeoutMs`, ends with a retryable `overloaded_error`, never a fake clean end. A dropped connection makes the output stream error. Cancelling the output stream cancels the upstream read.
 
 ### Dropped or degraded
