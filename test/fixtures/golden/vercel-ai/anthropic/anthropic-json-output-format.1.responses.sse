@@ -1,0 +1,366 @@
+event: response.created
+data: {"type":"response.created","sequence_number":0,"response":{"id":"resp_01KbeodbKEyjf2fLb2Jnkr5s","object":"response","created_at":1767225600,"status":"in_progress","error":null,"incomplete_details":null,"model":"claude-sonnet-4-5-20250929","output":[],"instructions":null,"tools":[],"tool_choice":"auto","parallel_tool_calls":true,"temperature":null,"top_p":null,"metadata":{},"store":false,"service_tier":"default"}}
+
+event: response.in_progress
+data: {"type":"response.in_progress","sequence_number":1,"response":{"id":"resp_01KbeodbKEyjf2fLb2Jnkr5s","object":"response","created_at":1767225600,"status":"in_progress","error":null,"incomplete_details":null,"model":"claude-sonnet-4-5-20250929","output":[],"instructions":null,"tools":[],"tool_choice":"auto","parallel_tool_calls":true,"temperature":null,"top_p":null,"metadata":{},"store":false,"service_tier":"default"}}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","sequence_number":2,"output_index":0,"item":{"type":"message","id":"msg_0","status":"in_progress","role":"assistant","content":[]}}
+
+event: response.content_part.added
+data: {"type":"response.content_part.added","sequence_number":3,"item_id":"msg_0","output_index":0,"content_index":0,"part":{"type":"output_text","text":"","annotations":[],"logprobs":[]}}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":4,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"{\"","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":5,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"characters\"","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":6,"item_id":"msg_0","output_index":0,"content_index":0,"delta":":[{\"name\":\"Th","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":7,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"eron","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":8,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" Iron","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":9,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"heart\",\"class\":\"warrior\",\"description","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":10,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"\":\"A battle","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":11,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"-scar","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":12,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"red veteran","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":13,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" with","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":14,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" steel","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":15,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"-","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":16,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"gray hair and a","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":17,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" prominent","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":18,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" scar across his left eye.","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":19,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" Wiel","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":20,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"ding a massive two","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":21,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"-handed sword passe","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":22,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"d down through his family for","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":23,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" generations,","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":24,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" Theron fights","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":25,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" with discipl","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":26,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"ined precision h","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":27,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"oned through decades","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":28,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" of combat. Despite","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":29,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" his gruff exterior, he harb","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":30,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"ors a deep sense of honor and prot","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":31,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"ects the weak","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":32,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" without","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":33,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" hesitation.","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":34,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"\"},{\"name\":\"Lyra","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":35,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" Star","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":36,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"weaver\",\"class\":\"mage\",\"","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":37,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"description\":\"A young","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":38,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" pro","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":39,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"digy in","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":40,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" the","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":41,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" arcane arts with","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":42,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" flowing","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":43,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" silver ro","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":44,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"bes ador","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":45,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"ned with celest","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":46,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"ial patterns","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":47,"item_id":"msg_0","output_index":0,"content_index":0,"delta":". Her","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":48,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" eyes","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":49,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" g","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":50,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"low f","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":51,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"aintly blue","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":52,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" when","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":53,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" chann","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":54,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"eling powerful","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":55,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" sp","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":56,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"ells.","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":57,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" Lyra special","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":58,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"izes in ele","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":59,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"mental magic an","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":60,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"d ast","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":61,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"ral div","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":62,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"ination, having","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":63,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" studie","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":64,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"d at","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":65,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" the Gran","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":66,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"d Academy since","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":67,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" childhoo","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":68,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"d. She is","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":69,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" curious","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":70,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" and ide","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":71,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"alistic, often getting","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":72,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" into","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":73,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" trouble","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":74,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" while","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":75,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" pursuing","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":76,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" forbidden","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":77,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" knowledge.\"},{\"name\":\"R","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":78,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"ook","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":79,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" Shadow","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":80,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"st","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":81,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"ep","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":82,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"\",\"class\":\"thief\",\"description\":\"","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":83,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"A nim","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":84,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"ble and cun","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":85,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"ning r","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":86,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"ogue who","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":87,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" moves through","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":88,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" shadows","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":89,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" like","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":90,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" a whis","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":91,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"per in","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":92,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" the night. With","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":93,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" jet","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":94,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"-black hair,","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":95,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" leather","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":96,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" armor,","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":97,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" and an array of lock","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":98,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"picks an","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":99,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"d daggers hidden on","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":100,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" his person, Rook makes his","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":101,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" living liber","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":102,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"ating treas","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":103,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"ures from those","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":104,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" he","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":105,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" deems unworthy of","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":106,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" them","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":107,"item_id":"msg_0","output_index":0,"content_index":0,"delta":". Behin","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":108,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"d his coc","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":109,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"ky smile","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":110,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" lies a trouble","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":111,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"d past and a strict","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":112,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" personal","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":113,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" code about","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":114,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" who","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":115,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" deserves to be","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":116,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" rob","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":117,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"bed.\"}]}","logprobs":[]}
+
+event: response.output_text.done
+data: {"type":"response.output_text.done","sequence_number":118,"item_id":"msg_0","output_index":0,"content_index":0,"text":"{\"characters\":[{\"name\":\"Theron Ironheart\",\"class\":\"warrior\",\"description\":\"A battle-scarred veteran with steel-gray hair and a prominent scar across his left eye. Wielding a massive two-handed sword passed down through his family for generations, Theron fights with disciplined precision honed through decades of combat. Despite his gruff exterior, he harbors a deep sense of honor and protects the weak without hesitation.\"},{\"name\":\"Lyra Starweaver\",\"class\":\"mage\",\"description\":\"A young prodigy in the arcane arts with flowing silver robes adorned with celestial patterns. Her eyes glow faintly blue when channeling powerful spells. Lyra specializes in elemental magic and astral divination, having studied at the Grand Academy since childhood. She is curious and idealistic, often getting into trouble while pursuing forbidden knowledge.\"},{\"name\":\"Rook Shadowstep\",\"class\":\"thief\",\"description\":\"A nimble and cunning rogue who moves through shadows like a whisper in the night. With jet-black hair, leather armor, and an array of lockpicks and daggers hidden on his person, Rook makes his living liberating treasures from those he deems unworthy of them. Behind his cocky smile lies a troubled past and a strict personal code about who deserves to be robbed.\"}]}","logprobs":[]}
+
+event: response.content_part.done
+data: {"type":"response.content_part.done","sequence_number":119,"item_id":"msg_0","output_index":0,"content_index":0,"part":{"type":"output_text","text":"{\"characters\":[{\"name\":\"Theron Ironheart\",\"class\":\"warrior\",\"description\":\"A battle-scarred veteran with steel-gray hair and a prominent scar across his left eye. Wielding a massive two-handed sword passed down through his family for generations, Theron fights with disciplined precision honed through decades of combat. Despite his gruff exterior, he harbors a deep sense of honor and protects the weak without hesitation.\"},{\"name\":\"Lyra Starweaver\",\"class\":\"mage\",\"description\":\"A young prodigy in the arcane arts with flowing silver robes adorned with celestial patterns. Her eyes glow faintly blue when channeling powerful spells. Lyra specializes in elemental magic and astral divination, having studied at the Grand Academy since childhood. She is curious and idealistic, often getting into trouble while pursuing forbidden knowledge.\"},{\"name\":\"Rook Shadowstep\",\"class\":\"thief\",\"description\":\"A nimble and cunning rogue who moves through shadows like a whisper in the night. With jet-black hair, leather armor, and an array of lockpicks and daggers hidden on his person, Rook makes his living liberating treasures from those he deems unworthy of them. Behind his cocky smile lies a troubled past and a strict personal code about who deserves to be robbed.\"}]}","annotations":[],"logprobs":[]}}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","sequence_number":120,"output_index":0,"item":{"type":"message","id":"msg_0","status":"completed","role":"assistant","content":[{"type":"output_text","text":"{\"characters\":[{\"name\":\"Theron Ironheart\",\"class\":\"warrior\",\"description\":\"A battle-scarred veteran with steel-gray hair and a prominent scar across his left eye. Wielding a massive two-handed sword passed down through his family for generations, Theron fights with disciplined precision honed through decades of combat. Despite his gruff exterior, he harbors a deep sense of honor and protects the weak without hesitation.\"},{\"name\":\"Lyra Starweaver\",\"class\":\"mage\",\"description\":\"A young prodigy in the arcane arts with flowing silver robes adorned with celestial patterns. Her eyes glow faintly blue when channeling powerful spells. Lyra specializes in elemental magic and astral divination, having studied at the Grand Academy since childhood. She is curious and idealistic, often getting into trouble while pursuing forbidden knowledge.\"},{\"name\":\"Rook Shadowstep\",\"class\":\"thief\",\"description\":\"A nimble and cunning rogue who moves through shadows like a whisper in the night. With jet-black hair, leather armor, and an array of lockpicks and daggers hidden on his person, Rook makes his living liberating treasures from those he deems unworthy of them. Behind his cocky smile lies a troubled past and a strict personal code about who deserves to be robbed.\"}]}","annotations":[],"logprobs":[]}]}}
+
+event: response.completed
+data: {"type":"response.completed","sequence_number":121,"response":{"id":"resp_01KbeodbKEyjf2fLb2Jnkr5s","object":"response","created_at":1767225600,"status":"completed","error":null,"incomplete_details":null,"model":"claude-sonnet-4-5-20250929","output":[{"type":"message","id":"msg_0","status":"completed","role":"assistant","content":[{"type":"output_text","text":"{\"characters\":[{\"name\":\"Theron Ironheart\",\"class\":\"warrior\",\"description\":\"A battle-scarred veteran with steel-gray hair and a prominent scar across his left eye. Wielding a massive two-handed sword passed down through his family for generations, Theron fights with disciplined precision honed through decades of combat. Despite his gruff exterior, he harbors a deep sense of honor and protects the weak without hesitation.\"},{\"name\":\"Lyra Starweaver\",\"class\":\"mage\",\"description\":\"A young prodigy in the arcane arts with flowing silver robes adorned with celestial patterns. Her eyes glow faintly blue when channeling powerful spells. Lyra specializes in elemental magic and astral divination, having studied at the Grand Academy since childhood. She is curious and idealistic, often getting into trouble while pursuing forbidden knowledge.\"},{\"name\":\"Rook Shadowstep\",\"class\":\"thief\",\"description\":\"A nimble and cunning rogue who moves through shadows like a whisper in the night. With jet-black hair, leather armor, and an array of lockpicks and daggers hidden on his person, Rook makes his living liberating treasures from those he deems unworthy of them. Behind his cocky smile lies a troubled past and a strict personal code about who deserves to be robbed.\"}]}","annotations":[],"logprobs":[]}]}],"instructions":null,"tools":[],"tool_choice":"auto","parallel_tool_calls":true,"temperature":null,"top_p":null,"metadata":{},"store":false,"service_tier":"default","usage":{"input_tokens":313,"input_tokens_details":{"cached_tokens":0,"cache_write_tokens":0},"output_tokens":305,"output_tokens_details":{"reasoning_tokens":0},"total_tokens":618}}}
+

@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Vitest never writes snapshots/goldens under CI: a missing or changed golden fails the run.
+  CI: "true"
+
+jobs:
+  check:
+    name: Node ${{ matrix.node }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 22, 24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - name: Test (unit, recorded fixtures, OpenAI spec conformance, SDK consumers, chunk-split invariance)
+        run: npm run test:coverage
+      - name: Package smoke (pack, install tarball, import as a consumer)
+        run: npm run smoke
+      - name: Tests left the tree clean
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git status --porcelain
+            echo "::error::The run modified tracked files or left untracked ones (goldens, spec, build output)."
+            exit 1
+          fi

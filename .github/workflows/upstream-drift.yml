@@ -1,0 +1,43 @@
+name: Upstream drift
+
+# Re-runs conformance against OpenAI's latest spec and the latest official SDKs.
+# A failure means upstream moved; CI stays pinned until the vendored spec / lockfile is bumped.
+
+on:
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  openai-spec:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Sync the Responses slice of openai/openai-openapi@main
+        run: node scripts/sync-openai-spec.mjs main
+      - name: Schema changes since the pinned commit
+        run: git diff --stat -- test/fixtures/external/openai-openapi
+      - run: npx vitest run test/conformance/openai-spec.test.ts
+
+  latest-sdks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm install --no-save openai@latest @anthropic-ai/sdk@latest
+      - run: npm ls openai @anthropic-ai/sdk
+      - run: npx vitest run test/conformance/sdk.test.ts

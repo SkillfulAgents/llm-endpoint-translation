@@ -1,0 +1,60 @@
+export { TranslationError, type TranslationErrorCode } from "./errors.js";
+
+export {
+  clampEffort,
+  createEffortMapper,
+  defaultEffortMapper,
+  isThinkingDisabled,
+  readAnthropicEffort,
+  type EffortCeiling,
+  type EffortMapper,
+  type EffortMapperOptions,
+  type ReasoningEffort,
+} from "./shared/effort.js";
+
+// Messages -> Responses: an Anthropic client talking to a Responses upstream.
+export {
+  hasWebFetchTool,
+  messagesRequestToResponses,
+  type ImageOmit,
+  type ResponsesRequestOptions,
+  type ResponsesRequestResult,
+  type ServiceTier,
+} from "./messages-to-responses/request.js";
+export {
+  responsesResponseToMessages,
+  type ResponsesResponseOptions,
+} from "./messages-to-responses/response.js";
+export {
+  RESPONSES_STREAM_IDLE_TIMEOUT_MS,
+  responsesStreamToMessagesStream,
+  type ResponsesStreamOptions,
+} from "./messages-to-responses/stream.js";
+export { responsesErrorToMessagesError } from "./messages-to-responses/error.js";
+export {
+  extractResponsesUsage,
+  servedSpeedEcho,
+  type AnthropicUsage,
+} from "./messages-to-responses/usage.js";
+export {
+  decodeReasoningSignature,
+  encodeReasoningSignature,
+  isReasoningReplaySignature,
+  reasoningReplayScope,
+  type ReasoningReplay,
+} from "./messages-to-responses/reasoning-replay.js";
+
+// Responses -> Messages: a Responses client talking to a Messages upstream.
+export {
+  DEFAULT_MAX_OUTPUT_TOKENS,
+  responsesRequestToMessages,
+} from "./responses-to-messages/request.js";
+export {
+  messagesErrorToResponsesError,
+  messagesResponseToResponses,
+  toResponsesUsage,
+} from "./responses-to-messages/response.js";
+export {
+  messagesStreamToResponsesStream,
+  type MessagesStreamOptions,
+} from "./responses-to-messages/stream.js";

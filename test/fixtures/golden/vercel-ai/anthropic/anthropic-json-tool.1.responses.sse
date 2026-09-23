@@ -1,0 +1,27 @@
+event: response.created
+data: {"type":"response.created","sequence_number":0,"response":{"id":"resp_01K2JbSUMYhez5RHoK9ZCj9U","object":"response","created_at":1767225600,"status":"in_progress","error":null,"incomplete_details":null,"model":"claude-haiku-4-5-20251001","output":[],"instructions":null,"tools":[],"tool_choice":"auto","parallel_tool_calls":true,"temperature":null,"top_p":null,"metadata":{},"store":false,"service_tier":"default"}}
+
+event: response.in_progress
+data: {"type":"response.in_progress","sequence_number":1,"response":{"id":"resp_01K2JbSUMYhez5RHoK9ZCj9U","object":"response","created_at":1767225600,"status":"in_progress","error":null,"incomplete_details":null,"model":"claude-haiku-4-5-20251001","output":[],"instructions":null,"tools":[],"tool_choice":"auto","parallel_tool_calls":true,"temperature":null,"top_p":null,"metadata":{},"store":false,"service_tier":"default"}}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","sequence_number":2,"output_index":0,"item":{"type":"function_call","id":"fc_0","call_id":"toolu_01KFbKqPYSuAKujiL6mTfzYA","name":"json","arguments":"","status":"in_progress"}}
+
+event: response.function_call_arguments.delta
+data: {"type":"response.function_call_arguments.delta","sequence_number":3,"item_id":"fc_0","output_index":0,"delta":""}
+
+event: response.function_call_arguments.delta
+data: {"type":"response.function_call_arguments.delta","sequence_number":4,"item_id":"fc_0","output_index":0,"delta":"{\"elements\": [{\"location\": \"San Francisco\", \"temperature\": 58, \"condition\": \"sunny\"}]"}
+
+event: response.function_call_arguments.delta
+data: {"type":"response.function_call_arguments.delta","sequence_number":5,"item_id":"fc_0","output_index":0,"delta":"}"}
+
+event: response.function_call_arguments.done
+data: {"type":"response.function_call_arguments.done","sequence_number":6,"item_id":"fc_0","output_index":0,"arguments":"{\"elements\": [{\"location\": \"San Francisco\", \"temperature\": 58, \"condition\": \"sunny\"}]}"}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","sequence_number":7,"output_index":0,"item":{"type":"function_call","id":"fc_0","call_id":"toolu_01KFbKqPYSuAKujiL6mTfzYA","name":"json","arguments":"{\"elements\": [{\"location\": \"San Francisco\", \"temperature\": 58, \"condition\": \"sunny\"}]}","status":"completed"}}
+
+event: response.completed
+data: {"type":"response.completed","sequence_number":8,"response":{"id":"resp_01K2JbSUMYhez5RHoK9ZCj9U","object":"response","created_at":1767225600,"status":"completed","error":null,"incomplete_details":null,"model":"claude-haiku-4-5-20251001","output":[{"type":"function_call","id":"fc_0","call_id":"toolu_01KFbKqPYSuAKujiL6mTfzYA","name":"json","arguments":"{\"elements\": [{\"location\": \"San Francisco\", \"temperature\": 58, \"condition\": \"sunny\"}]}","status":"completed"}],"instructions":null,"tools":[],"tool_choice":"auto","parallel_tool_calls":true,"temperature":null,"top_p":null,"metadata":{},"store":false,"service_tier":"default","usage":{"input_tokens":849,"input_tokens_details":{"cached_tokens":0,"cache_write_tokens":0},"output_tokens":47,"output_tokens_details":{"reasoning_tokens":0},"total_tokens":896}}}
+

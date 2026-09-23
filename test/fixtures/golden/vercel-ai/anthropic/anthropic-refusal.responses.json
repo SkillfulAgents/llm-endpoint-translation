@@ -1,0 +1,44 @@
+{
+  "id": "resp_01RefusalExampleAbcdefghijk",
+  "object": "response",
+  "created_at": 1767225600,
+  "status": "completed",
+  "error": null,
+  "incomplete_details": null,
+  "model": "claude-fable-5",
+  "output": [
+    {
+      "type": "message",
+      "id": "msg_0",
+      "status": "completed",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "refusal",
+          "refusal": "This request triggered restrictions on violative cyber content and was blocked under Anthropic's Usage Policy."
+        }
+      ]
+    }
+  ],
+  "instructions": null,
+  "tools": [],
+  "tool_choice": "auto",
+  "parallel_tool_calls": true,
+  "temperature": null,
+  "top_p": null,
+  "metadata": {},
+  "store": false,
+  "service_tier": "default",
+  "usage": {
+    "input_tokens": 18,
+    "input_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0
+    },
+    "output_tokens": 5,
+    "output_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "total_tokens": 23
+  }
+}

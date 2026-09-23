@@ -1,0 +1,78 @@
+event: response.created
+data: {"type":"response.created","sequence_number":0,"response":{"id":"resp_01Y6V41gqPaKWEw7iPouH7iW","object":"response","created_at":1767225600,"status":"in_progress","error":null,"incomplete_details":null,"model":"claude-sonnet-4-5-20250929","output":[],"instructions":null,"tools":[],"tool_choice":"auto","parallel_tool_calls":true,"temperature":null,"top_p":null,"metadata":{},"store":false,"service_tier":"default"}}
+
+event: response.in_progress
+data: {"type":"response.in_progress","sequence_number":1,"response":{"id":"resp_01Y6V41gqPaKWEw7iPouH7iW","object":"response","created_at":1767225600,"status":"in_progress","error":null,"incomplete_details":null,"model":"claude-sonnet-4-5-20250929","output":[],"instructions":null,"tools":[],"tool_choice":"auto","parallel_tool_calls":true,"temperature":null,"top_p":null,"metadata":{},"store":false,"service_tier":"default"}}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","sequence_number":2,"output_index":0,"item":{"type":"reasoning","id":"rs_0","summary":[]}}
+
+event: response.reasoning_summary_part.added
+data: {"type":"response.reasoning_summary_part.added","sequence_number":3,"item_id":"rs_0","output_index":0,"summary_index":0,"part":{"type":"summary_text","text":""}}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","sequence_number":4,"item_id":"rs_0","output_index":0,"summary_index":0,"delta":"The previous"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","sequence_number":5,"item_id":"rs_0","output_index":0,"summary_index":0,"delta":" result"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","sequence_number":6,"item_id":"rs_0","output_index":0,"summary_index":0,"delta":" was"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","sequence_number":7,"item_id":"rs_0","output_index":0,"summary_index":0,"delta":" 925."}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","sequence_number":8,"item_id":"rs_0","output_index":0,"summary_index":0,"delta":" Now"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","sequence_number":9,"item_id":"rs_0","output_index":0,"summary_index":0,"delta":" I need to divide that"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","sequence_number":10,"item_id":"rs_0","output_index":0,"summary_index":0,"delta":" by 5.\n\n925"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","sequence_number":11,"item_id":"rs_0","output_index":0,"summary_index":0,"delta":" ÷ 5 "}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","sequence_number":12,"item_id":"rs_0","output_index":0,"summary_index":0,"delta":"= 185"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","sequence_number":13,"item_id":"rs_0","output_index":0,"summary_index":0,"delta":""}
+
+event: response.reasoning_summary_text.done
+data: {"type":"response.reasoning_summary_text.done","sequence_number":14,"item_id":"rs_0","output_index":0,"summary_index":0,"text":"The previous result was 925. Now I need to divide that by 5.\n\n925 ÷ 5 = 185"}
+
+event: response.reasoning_summary_part.done
+data: {"type":"response.reasoning_summary_part.done","sequence_number":15,"item_id":"rs_0","output_index":0,"summary_index":0,"part":{"type":"summary_text","text":"The previous result was 925. Now I need to divide that by 5.\n\n925 ÷ 5 = 185"}}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","sequence_number":16,"output_index":0,"item":{"type":"reasoning","id":"rs_0","summary":[{"type":"summary_text","text":"The previous result was 925. Now I need to divide that by 5.\n\n925 ÷ 5 = 185"}],"encrypted_content":"th:EvQBCkYICxgCKkAxhD4NUKFzudtZ6NzbZdEiBACIScTzqjPViM596iWLZIk4EFKYYBj3B6Ptl3b0dcQv/VeJBNbejNWIWRBn+KPNEgz6HWtKx7p+QRgKsEoaDGjsiqfht7gTRFYHiyIwD1VSmNqHxv3wy8KEMP+LYb/TC4UH3H97tuoaADARFFcA0phdfxnzKQxFnc9lwY+dKlzUsaKSUAFeu1bDL5ikZJ1vL0Fkz6JjoFke0L/wOJRIUDUlDUOFJ1tZ3ea7g6LGE/5hwuvWgLwewdcm64d+43l7F57XrOmqNd6flI2K/oPr/4yzNgvi/EhT6Ca17BgB"}}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","sequence_number":17,"output_index":1,"item":{"type":"message","id":"msg_1","status":"in_progress","role":"assistant","content":[]}}
+
+event: response.content_part.added
+data: {"type":"response.content_part.added","sequence_number":18,"item_id":"msg_1","output_index":1,"content_index":0,"part":{"type":"output_text","text":"","annotations":[],"logprobs":[]}}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":19,"item_id":"msg_1","output_index":1,"content_index":0,"delta":"925","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":20,"item_id":"msg_1","output_index":1,"content_index":0,"delta":" ÷ 5 ","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":21,"item_id":"msg_1","output_index":1,"content_index":0,"delta":"= 185","logprobs":[]}
+
+event: response.output_text.done
+data: {"type":"response.output_text.done","sequence_number":22,"item_id":"msg_1","output_index":1,"content_index":0,"text":"925 ÷ 5 = 185","logprobs":[]}
+
+event: response.content_part.done
+data: {"type":"response.content_part.done","sequence_number":23,"item_id":"msg_1","output_index":1,"content_index":0,"part":{"type":"output_text","text":"925 ÷ 5 = 185","annotations":[],"logprobs":[]}}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","sequence_number":24,"output_index":1,"item":{"type":"message","id":"msg_1","status":"completed","role":"assistant","content":[{"type":"output_text","text":"925 ÷ 5 = 185","annotations":[],"logprobs":[]}]}}
+
+event: response.completed
+data: {"type":"response.completed","sequence_number":25,"response":{"id":"resp_01Y6V41gqPaKWEw7iPouH7iW","object":"response","created_at":1767225600,"status":"completed","error":null,"incomplete_details":null,"model":"claude-sonnet-4-5-20250929","output":[{"type":"reasoning","id":"rs_0","summary":[{"type":"summary_text","text":"The previous result was 925. Now I need to divide that by 5.\n\n925 ÷ 5 = 185"}],"encrypted_content":"th:EvQBCkYICxgCKkAxhD4NUKFzudtZ6NzbZdEiBACIScTzqjPViM596iWLZIk4EFKYYBj3B6Ptl3b0dcQv/VeJBNbejNWIWRBn+KPNEgz6HWtKx7p+QRgKsEoaDGjsiqfht7gTRFYHiyIwD1VSmNqHxv3wy8KEMP+LYb/TC4UH3H97tuoaADARFFcA0phdfxnzKQxFnc9lwY+dKlzUsaKSUAFeu1bDL5ikZJ1vL0Fkz6JjoFke0L/wOJRIUDUlDUOFJ1tZ3ea7g6LGE/5hwuvWgLwewdcm64d+43l7F57XrOmqNd6flI2K/oPr/4yzNgvi/EhT6Ca17BgB"},{"type":"message","id":"msg_1","status":"completed","role":"assistant","content":[{"type":"output_text","text":"925 ÷ 5 = 185","annotations":[],"logprobs":[]}]}],"instructions":null,"tools":[],"tool_choice":"auto","parallel_tool_calls":true,"temperature":null,"top_p":null,"metadata":{},"store":false,"service_tier":"default","usage":{"input_tokens":69,"input_tokens_details":{"cached_tokens":0,"cache_write_tokens":0},"output_tokens":53,"output_tokens_details":{"reasoning_tokens":0},"total_tokens":122}}}
+

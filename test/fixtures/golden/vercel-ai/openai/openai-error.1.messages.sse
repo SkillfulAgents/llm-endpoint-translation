@@ -1,0 +1,6 @@
+event: message_start
+data: {"type":"message_start","message":{"id":"resp_05500b38c2cd9bfc00691c7c9d222481a3b595421266dab424","type":"message","role":"assistant","model":"gpt-5-nano-2025-08-07","content":[],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":0,"output_tokens":0,"cache_creation_input_tokens":0,"cache_read_input_tokens":0}}}
+
+event: error
+data: {"type":"error","error":{"type":"openai_response_failed","message":"Upstream model reported a stream error"}}
+

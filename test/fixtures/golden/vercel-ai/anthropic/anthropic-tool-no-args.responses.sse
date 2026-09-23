@@ -1,0 +1,42 @@
+event: response.created
+data: {"type":"response.created","sequence_number":0,"response":{"id":"resp_01GE2RKp1VYsPzdFs3sS9z5S","object":"response","created_at":1767225600,"status":"in_progress","error":null,"incomplete_details":null,"model":"claude-sonnet-4-5-20250929","output":[],"instructions":null,"tools":[],"tool_choice":"auto","parallel_tool_calls":true,"temperature":null,"top_p":null,"metadata":{},"store":false,"service_tier":"default"}}
+
+event: response.in_progress
+data: {"type":"response.in_progress","sequence_number":1,"response":{"id":"resp_01GE2RKp1VYsPzdFs3sS9z5S","object":"response","created_at":1767225600,"status":"in_progress","error":null,"incomplete_details":null,"model":"claude-sonnet-4-5-20250929","output":[],"instructions":null,"tools":[],"tool_choice":"auto","parallel_tool_calls":true,"temperature":null,"top_p":null,"metadata":{},"store":false,"service_tier":"default"}}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","sequence_number":2,"output_index":0,"item":{"type":"message","id":"msg_0","status":"in_progress","role":"assistant","content":[]}}
+
+event: response.content_part.added
+data: {"type":"response.content_part.added","sequence_number":3,"item_id":"msg_0","output_index":0,"content_index":0,"part":{"type":"output_text","text":"","annotations":[],"logprobs":[]}}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":4,"item_id":"msg_0","output_index":0,"content_index":0,"delta":"I'll update the issue list for","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":5,"item_id":"msg_0","output_index":0,"content_index":0,"delta":" you.","logprobs":[]}
+
+event: response.output_text.done
+data: {"type":"response.output_text.done","sequence_number":6,"item_id":"msg_0","output_index":0,"content_index":0,"text":"I'll update the issue list for you.","logprobs":[]}
+
+event: response.content_part.done
+data: {"type":"response.content_part.done","sequence_number":7,"item_id":"msg_0","output_index":0,"content_index":0,"part":{"type":"output_text","text":"I'll update the issue list for you.","annotations":[],"logprobs":[]}}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","sequence_number":8,"output_index":0,"item":{"type":"message","id":"msg_0","status":"completed","role":"assistant","content":[{"type":"output_text","text":"I'll update the issue list for you.","annotations":[],"logprobs":[]}]}}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","sequence_number":9,"output_index":1,"item":{"type":"function_call","id":"fc_1","call_id":"toolu_01QE1WLsSVp5hy5Q3GmGTmjP","name":"updateIssueList","arguments":"","status":"in_progress"}}
+
+event: response.function_call_arguments.delta
+data: {"type":"response.function_call_arguments.delta","sequence_number":10,"item_id":"fc_1","output_index":1,"delta":""}
+
+event: response.function_call_arguments.done
+data: {"type":"response.function_call_arguments.done","sequence_number":11,"item_id":"fc_1","output_index":1,"arguments":"{}"}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","sequence_number":12,"output_index":1,"item":{"type":"function_call","id":"fc_1","call_id":"toolu_01QE1WLsSVp5hy5Q3GmGTmjP","name":"updateIssueList","arguments":"{}","status":"completed"}}
+
+event: response.completed
+data: {"type":"response.completed","sequence_number":13,"response":{"id":"resp_01GE2RKp1VYsPzdFs3sS9z5S","object":"response","created_at":1767225600,"status":"completed","error":null,"incomplete_details":null,"model":"claude-sonnet-4-5-20250929","output":[{"type":"message","id":"msg_0","status":"completed","role":"assistant","content":[{"type":"output_text","text":"I'll update the issue list for you.","annotations":[],"logprobs":[]}]},{"type":"function_call","id":"fc_1","call_id":"toolu_01QE1WLsSVp5hy5Q3GmGTmjP","name":"updateIssueList","arguments":"{}","status":"completed"}],"instructions":null,"tools":[],"tool_choice":"auto","parallel_tool_calls":true,"temperature":null,"top_p":null,"metadata":{},"store":false,"service_tier":"default","usage":{"input_tokens":565,"input_tokens_details":{"cached_tokens":0,"cache_write_tokens":0},"output_tokens":48,"output_tokens_details":{"reasoning_tokens":0},"total_tokens":613}}}
+

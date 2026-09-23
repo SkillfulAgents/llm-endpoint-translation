@@ -1,0 +1,468 @@
+event: response.created
+data: {"type":"response.created","sequence_number":0,"response":{"id":"resp_01LHpEgU4KbfgXGVi3UtHQY1","object":"response","created_at":1767225600,"status":"in_progress","error":null,"incomplete_details":null,"model":"claude-sonnet-4-20250514","output":[],"instructions":null,"tools":[],"tool_choice":"auto","parallel_tool_calls":true,"temperature":null,"top_p":null,"metadata":{},"store":false,"service_tier":"default"}}
+
+event: response.in_progress
+data: {"type":"response.in_progress","sequence_number":1,"response":{"id":"resp_01LHpEgU4KbfgXGVi3UtHQY1","object":"response","created_at":1767225600,"status":"in_progress","error":null,"incomplete_details":null,"model":"claude-sonnet-4-20250514","output":[],"instructions":null,"tools":[],"tool_choice":"auto","parallel_tool_calls":true,"temperature":null,"top_p":null,"metadata":{},"store":false,"service_tier":"default"}}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","sequence_number":2,"output_index":0,"item":{"type":"web_search_call","id":"srvtoolu_01Bj5uzzLcYG5hfueSLcDH8k","status":"in_progress","action":{"type":"search"}}}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","sequence_number":3,"output_index":0,"item":{"type":"web_search_call","id":"srvtoolu_01Bj5uzzLcYG5hfueSLcDH8k","status":"completed","action":{"type":"search","query":"tech news today September 26 2025","queries":["tech news today September 26 2025"]}}}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","sequence_number":4,"output_index":1,"item":{"type":"message","id":"msg_1","status":"in_progress","role":"assistant","content":[]}}
+
+event: response.content_part.added
+data: {"type":"response.content_part.added","sequence_number":5,"item_id":"msg_1","output_index":1,"content_index":0,"part":{"type":"output_text","text":"","annotations":[],"logprobs":[]}}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":6,"item_id":"msg_1","output_index":1,"content_index":0,"delta":"Base","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":7,"item_id":"msg_1","output_index":1,"content_index":0,"delta":"d on my search results, here","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":8,"item_id":"msg_1","output_index":1,"content_index":0,"delta":" are the key tech news developments from today","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":9,"item_id":"msg_1","output_index":1,"content_index":0,"delta":" (September 26, 2025):\n\n## Apple","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":10,"item_id":"msg_1","output_index":1,"content_index":0,"delta":" News\n","logprobs":[]}
+
+event: response.output_text.done
+data: {"type":"response.output_text.done","sequence_number":11,"item_id":"msg_1","output_index":1,"content_index":0,"text":"Based on my search results, here are the key tech news developments from today (September 26, 2025):\n\n## Apple News\n","logprobs":[]}
+
+event: response.content_part.done
+data: {"type":"response.content_part.done","sequence_number":12,"item_id":"msg_1","output_index":1,"content_index":0,"part":{"type":"output_text","text":"Based on my search results, here are the key tech news developments from today (September 26, 2025):\n\n## Apple News\n","annotations":[],"logprobs":[]}}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","sequence_number":13,"output_index":1,"item":{"type":"message","id":"msg_1","status":"completed","role":"assistant","content":[{"type":"output_text","text":"Based on my search results, here are the key tech news developments from today (September 26, 2025):\n\n## Apple News\n","annotations":[],"logprobs":[]}]}}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","sequence_number":14,"output_index":2,"item":{"type":"message","id":"msg_2","status":"in_progress","role":"assistant","content":[]}}
+
+event: response.content_part.added
+data: {"type":"response.content_part.added","sequence_number":15,"item_id":"msg_2","output_index":2,"content_index":0,"part":{"type":"output_text","text":"","annotations":[],"logprobs":[]}}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":16,"item_id":"msg_2","output_index":2,"content_index":0,"delta":"Apple today announced the grand reopening of Apple Ginza on Friday, September 26, located in the vib","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":17,"item_id":"msg_2","output_index":2,"content_index":0,"delta":"rant Ginza district where Apple's retail journey in","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":18,"item_id":"msg_2","output_index":2,"content_index":0,"delta":" Japan began more than two decades ago. Apple Ginza opens","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":19,"item_id":"msg_2","output_index":2,"content_index":0,"delta":" to customers Friday, September 26, at 10 a.m. JS","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":20,"item_id":"msg_2","output_index":2,"content_index":0,"delta":"T.","logprobs":[]}
+
+event: response.output_text.done
+data: {"type":"response.output_text.done","sequence_number":21,"item_id":"msg_2","output_index":2,"content_index":0,"text":"Apple today announced the grand reopening of Apple Ginza on Friday, September 26, located in the vibrant Ginza district where Apple's retail journey in Japan began more than two decades ago. Apple Ginza opens to customers Friday, September 26, at 10 a.m. JST.","logprobs":[]}
+
+event: response.content_part.done
+data: {"type":"response.content_part.done","sequence_number":22,"item_id":"msg_2","output_index":2,"content_index":0,"part":{"type":"output_text","text":"Apple today announced the grand reopening of Apple Ginza on Friday, September 26, located in the vibrant Ginza district where Apple's retail journey in Japan began more than two decades ago. Apple Ginza opens to customers Friday, September 26, at 10 a.m. JST.","annotations":[],"logprobs":[]}}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","sequence_number":23,"output_index":2,"item":{"type":"message","id":"msg_2","status":"completed","role":"assistant","content":[{"type":"output_text","text":"Apple today announced the grand reopening of Apple Ginza on Friday, September 26, located in the vibrant Ginza district where Apple's retail journey in Japan began more than two decades ago. Apple Ginza opens to customers Friday, September 26, at 10 a.m. JST.","annotations":[],"logprobs":[]}]}}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","sequence_number":24,"output_index":3,"item":{"type":"message","id":"msg_3","status":"in_progress","role":"assistant","content":[]}}
+
+event: response.content_part.added
+data: {"type":"response.content_part.added","sequence_number":25,"item_id":"msg_3","output_index":3,"content_index":0,"part":{"type":"output_text","text":"","annotations":[],"logprobs":[]}}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":26,"item_id":"msg_3","output_index":3,"content_index":0,"delta":" ","logprobs":[]}
+
+event: response.output_text.done
+data: {"type":"response.output_text.done","sequence_number":27,"item_id":"msg_3","output_index":3,"content_index":0,"text":" ","logprobs":[]}
+
+event: response.content_part.done
+data: {"type":"response.content_part.done","sequence_number":28,"item_id":"msg_3","output_index":3,"content_index":0,"part":{"type":"output_text","text":" ","annotations":[],"logprobs":[]}}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","sequence_number":29,"output_index":3,"item":{"type":"message","id":"msg_3","status":"completed","role":"assistant","content":[{"type":"output_text","text":" ","annotations":[],"logprobs":[]}]}}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","sequence_number":30,"output_index":4,"item":{"type":"message","id":"msg_4","status":"in_progress","role":"assistant","content":[]}}
+
+event: response.content_part.added
+data: {"type":"response.content_part.added","sequence_number":31,"item_id":"msg_4","output_index":4,"content_index":0,"part":{"type":"output_text","text":"","annotations":[],"logprobs":[]}}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":32,"item_id":"msg_4","output_index":4,"content_index":0,"delta":"Opened in 2003 as Apple's first store outside the U.S., Apple Ginza now","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":33,"item_id":"msg_4","output_index":4,"content_index":0,"delta":" returns in an all-new four-story design","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":34,"item_id":"msg_4","output_index":4,"content_index":0,"delta":" that brings together the best of Apple's products","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":35,"item_id":"msg_4","output_index":4,"content_index":0,"delta":", services, and experiences in one beau","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":36,"item_id":"msg_4","output_index":4,"content_index":0,"delta":"tifully reimagined space.","logprobs":[]}
+
+event: response.output_text.done
+data: {"type":"response.output_text.done","sequence_number":37,"item_id":"msg_4","output_index":4,"content_index":0,"text":"Opened in 2003 as Apple's first store outside the U.S., Apple Ginza now returns in an all-new four-story design that brings together the best of Apple's products, services, and experiences in one beautifully reimagined space.","logprobs":[]}
+
+event: response.content_part.done
+data: {"type":"response.content_part.done","sequence_number":38,"item_id":"msg_4","output_index":4,"content_index":0,"part":{"type":"output_text","text":"Opened in 2003 as Apple's first store outside the U.S., Apple Ginza now returns in an all-new four-story design that brings together the best of Apple's products, services, and experiences in one beautifully reimagined space.","annotations":[],"logprobs":[]}}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","sequence_number":39,"output_index":4,"item":{"type":"message","id":"msg_4","status":"completed","role":"assistant","content":[{"type":"output_text","text":"Opened in 2003 as Apple's first store outside the U.S., Apple Ginza now returns in an all-new four-story design that brings together the best of Apple's products, services, and experiences in one beautifully reimagined space.","annotations":[],"logprobs":[]}]}}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","sequence_number":40,"output_index":5,"item":{"type":"message","id":"msg_5","status":"in_progress","role":"assistant","content":[]}}
+
+event: response.content_part.added
+data: {"type":"response.content_part.added","sequence_number":41,"item_id":"msg_5","output_index":5,"content_index":0,"part":{"type":"output_text","text":"","annotations":[],"logprobs":[]}}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":42,"item_id":"msg_5","output_index":5,"content_index":0,"delta":"\n\n## Recent Apple Product Updates\n","logprobs":[]}
+
+event: response.output_text.done
+data: {"type":"response.output_text.done","sequence_number":43,"item_id":"msg_5","output_index":5,"content_index":0,"text":"\n\n## Recent Apple Product Updates\n","logprobs":[]}
+
+event: response.content_part.done
+data: {"type":"response.content_part.done","sequence_number":44,"item_id":"msg_5","output_index":5,"content_index":0,"part":{"type":"output_text","text":"\n\n## Recent Apple Product Updates\n","annotations":[],"logprobs":[]}}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","sequence_number":45,"output_index":5,"item":{"type":"message","id":"msg_5","status":"completed","role":"assistant","content":[{"type":"output_text","text":"\n\n## Recent Apple Product Updates\n","annotations":[],"logprobs":[]}]}}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","sequence_number":46,"output_index":6,"item":{"type":"message","id":"msg_6","status":"in_progress","role":"assistant","content":[]}}
+
+event: response.content_part.added
+data: {"type":"response.content_part.added","sequence_number":47,"item_id":"msg_6","output_index":6,"content_index":0,"part":{"type":"output_text","text":"","annotations":[],"logprobs":[]}}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":48,"item_id":"msg_6","output_index":6,"content_index":0,"delta":"Apple is considering building a pilot production line for a foldable iPhone in Taiwan, with plans to launch the new","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":49,"item_id":"msg_6","output_index":6,"content_index":0,"delta":" foldable iPhone in 2026. Currently, multiple","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":50,"item_id":"msg_6","output_index":6,"content_index":0,"delta":" sources have confirmed that Apple plans to release","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":51,"item_id":"msg_6","output_index":6,"content_index":0,"delta":" its first foldable iPhone in 2","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":52,"item_id":"msg_6","output_index":6,"content_index":0,"delta":"026 as part of the iPhone 18","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":53,"item_id":"msg_6","output_index":6,"content_index":0,"delta":" lineup.","logprobs":[]}
+
+event: response.output_text.done
+data: {"type":"response.output_text.done","sequence_number":54,"item_id":"msg_6","output_index":6,"content_index":0,"text":"Apple is considering building a pilot production line for a foldable iPhone in Taiwan, with plans to launch the new foldable iPhone in 2026. Currently, multiple sources have confirmed that Apple plans to release its first foldable iPhone in 2026 as part of the iPhone 18 lineup.","logprobs":[]}
+
+event: response.content_part.done
+data: {"type":"response.content_part.done","sequence_number":55,"item_id":"msg_6","output_index":6,"content_index":0,"part":{"type":"output_text","text":"Apple is considering building a pilot production line for a foldable iPhone in Taiwan, with plans to launch the new foldable iPhone in 2026. Currently, multiple sources have confirmed that Apple plans to release its first foldable iPhone in 2026 as part of the iPhone 18 lineup.","annotations":[],"logprobs":[]}}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","sequence_number":56,"output_index":6,"item":{"type":"message","id":"msg_6","status":"completed","role":"assistant","content":[{"type":"output_text","text":"Apple is considering building a pilot production line for a foldable iPhone in Taiwan, with plans to launch the new foldable iPhone in 2026. Currently, multiple sources have confirmed that Apple plans to release its first foldable iPhone in 2026 as part of the iPhone 18 lineup.","annotations":[],"logprobs":[]}]}}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","sequence_number":57,"output_index":7,"item":{"type":"message","id":"msg_7","status":"in_progress","role":"assistant","content":[]}}
+
+event: response.content_part.added
+data: {"type":"response.content_part.added","sequence_number":58,"item_id":"msg_7","output_index":7,"content_index":0,"part":{"type":"output_text","text":"","annotations":[],"logprobs":[]}}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":59,"item_id":"msg_7","output_index":7,"content_index":0,"delta":"\n\n","logprobs":[]}
+
+event: response.output_text.done
+data: {"type":"response.output_text.done","sequence_number":60,"item_id":"msg_7","output_index":7,"content_index":0,"text":"\n\n","logprobs":[]}
+
+event: response.content_part.done
+data: {"type":"response.content_part.done","sequence_number":61,"item_id":"msg_7","output_index":7,"content_index":0,"part":{"type":"output_text","text":"\n\n","annotations":[],"logprobs":[]}}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","sequence_number":62,"output_index":7,"item":{"type":"message","id":"msg_7","status":"completed","role":"assistant","content":[{"type":"output_text","text":"\n\n","annotations":[],"logprobs":[]}]}}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","sequence_number":63,"output_index":8,"item":{"type":"message","id":"msg_8","status":"in_progress","role":"assistant","content":[]}}
+
+event: response.content_part.added
+data: {"type":"response.content_part.added","sequence_number":64,"item_id":"msg_8","output_index":8,"content_index":0,"part":{"type":"output_text","text":"","annotations":[],"logprobs":[]}}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":65,"item_id":"msg_8","output_index":8,"content_index":0,"delta":"OpenAI launches ChatGPT","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":66,"item_id":"msg_8","output_index":8,"content_index":0,"delta":" Pulse, proactively writing","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":67,"item_id":"msg_8","output_index":8,"content_index":0,"delta":" your morning briefing. Open","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":68,"item_id":"msg_8","output_index":8,"content_index":0,"delta":"AI is rolling out a new feature","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":69,"item_id":"msg_8","output_index":8,"content_index":0,"delta":" in ChatGPT called Pulse,","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":70,"item_id":"msg_8","output_index":8,"content_index":0,"delta":" which generates personalized reports while users sleep","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":71,"item_id":"msg_8","output_index":8,"content_index":0,"delta":". Pulse provides users with a quick overview of their","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":72,"item_id":"msg_8","output_index":8,"content_index":0,"delta":" day with 5-10 briefings","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":73,"item_id":"msg_8","output_index":8,"content_index":0,"delta":", designed to encourage them to check Chat","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":74,"item_id":"msg_8","output_index":8,"content_index":0,"delta":"GPT first thing in the morning.","logprobs":[]}
+
+event: response.output_text.done
+data: {"type":"response.output_text.done","sequence_number":75,"item_id":"msg_8","output_index":8,"content_index":0,"text":"OpenAI launches ChatGPT Pulse, proactively writing your morning briefing. OpenAI is rolling out a new feature in ChatGPT called Pulse, which generates personalized reports while users sleep. Pulse provides users with a quick overview of their day with 5-10 briefings, designed to encourage them to check ChatGPT first thing in the morning.","logprobs":[]}
+
+event: response.content_part.done
+data: {"type":"response.content_part.done","sequence_number":76,"item_id":"msg_8","output_index":8,"content_index":0,"part":{"type":"output_text","text":"OpenAI launches ChatGPT Pulse, proactively writing your morning briefing. OpenAI is rolling out a new feature in ChatGPT called Pulse, which generates personalized reports while users sleep. Pulse provides users with a quick overview of their day with 5-10 briefings, designed to encourage them to check ChatGPT first thing in the morning.","annotations":[],"logprobs":[]}}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","sequence_number":77,"output_index":8,"item":{"type":"message","id":"msg_8","status":"completed","role":"assistant","content":[{"type":"output_text","text":"OpenAI launches ChatGPT Pulse, proactively writing your morning briefing. OpenAI is rolling out a new feature in ChatGPT called Pulse, which generates personalized reports while users sleep. Pulse provides users with a quick overview of their day with 5-10 briefings, designed to encourage them to check ChatGPT first thing in the morning.","annotations":[],"logprobs":[]}]}}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","sequence_number":78,"output_index":9,"item":{"type":"message","id":"msg_9","status":"in_progress","role":"assistant","content":[]}}
+
+event: response.content_part.added
+data: {"type":"response.content_part.added","sequence_number":79,"item_id":"msg_9","output_index":9,"content_index":0,"part":{"type":"output_text","text":"","annotations":[],"logprobs":[]}}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":80,"item_id":"msg_9","output_index":9,"content_index":0,"delta":"\n\n## Major Tech Industry Developments from Yesterday\n\n","logprobs":[]}
+
+event: response.output_text.done
+data: {"type":"response.output_text.done","sequence_number":81,"item_id":"msg_9","output_index":9,"content_index":0,"text":"\n\n## Major Tech Industry Developments from Yesterday\n\n","logprobs":[]}
+
+event: response.content_part.done
+data: {"type":"response.content_part.done","sequence_number":82,"item_id":"msg_9","output_index":9,"content_index":0,"part":{"type":"output_text","text":"\n\n## Major Tech Industry Developments from Yesterday\n\n","annotations":[],"logprobs":[]}}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","sequence_number":83,"output_index":9,"item":{"type":"message","id":"msg_9","status":"completed","role":"assistant","content":[{"type":"output_text","text":"\n\n## Major Tech Industry Developments from Yesterday\n\n","annotations":[],"logprobs":[]}]}}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","sequence_number":84,"output_index":10,"item":{"type":"message","id":"msg_10","status":"in_progress","role":"assistant","content":[]}}
+
+event: response.content_part.added
+data: {"type":"response.content_part.added","sequence_number":85,"item_id":"msg_10","output_index":10,"content_index":0,"part":{"type":"output_text","text":"","annotations":[],"logprobs":[]}}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":86,"item_id":"msg_10","output_index":10,"content_index":0,"delta":"On September 25, 2025, headlines were dominated by seismic shifts in AI infrastructure, potential block","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":87,"item_id":"msg_10","output_index":10,"content_index":0,"delta":"buster partnerships between legacy chip giants, and escalating regulatory battles that","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":88,"item_id":"msg_10","output_index":10,"content_index":0,"delta":" could redefine global innovation.","logprobs":[]}
+
+event: response.output_text.done
+data: {"type":"response.output_text.done","sequence_number":89,"item_id":"msg_10","output_index":10,"content_index":0,"text":"On September 25, 2025, headlines were dominated by seismic shifts in AI infrastructure, potential blockbuster partnerships between legacy chip giants, and escalating regulatory battles that could redefine global innovation.","logprobs":[]}
+
+event: response.content_part.done
+data: {"type":"response.content_part.done","sequence_number":90,"item_id":"msg_10","output_index":10,"content_index":0,"part":{"type":"output_text","text":"On September 25, 2025, headlines were dominated by seismic shifts in AI infrastructure, potential blockbuster partnerships between legacy chip giants, and escalating regulatory battles that could redefine global innovation.","annotations":[],"logprobs":[]}}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","sequence_number":91,"output_index":10,"item":{"type":"message","id":"msg_10","status":"completed","role":"assistant","content":[{"type":"output_text","text":"On September 25, 2025, headlines were dominated by seismic shifts in AI infrastructure, potential blockbuster partnerships between legacy chip giants, and escalating regulatory battles that could redefine global innovation.","annotations":[],"logprobs":[]}]}}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","sequence_number":92,"output_index":11,"item":{"type":"message","id":"msg_11","status":"in_progress","role":"assistant","content":[]}}
+
+event: response.content_part.added
+data: {"type":"response.content_part.added","sequence_number":93,"item_id":"msg_11","output_index":11,"content_index":0,"part":{"type":"output_text","text":"","annotations":[],"logprobs":[]}}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":94,"item_id":"msg_11","output_index":11,"content_index":0,"delta":"\n\nKey highlights include:\n- ","logprobs":[]}
+
+event: response.output_text.done
+data: {"type":"response.output_text.done","sequence_number":95,"item_id":"msg_11","output_index":11,"content_index":0,"text":"\n\nKey highlights include:\n- ","logprobs":[]}
+
+event: response.content_part.done
+data: {"type":"response.content_part.done","sequence_number":96,"item_id":"msg_11","output_index":11,"content_index":0,"part":{"type":"output_text","text":"\n\nKey highlights include:\n- ","annotations":[],"logprobs":[]}}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","sequence_number":97,"output_index":11,"item":{"type":"message","id":"msg_11","status":"completed","role":"assistant","content":[{"type":"output_text","text":"\n\nKey highlights include:\n- ","annotations":[],"logprobs":[]}]}}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","sequence_number":98,"output_index":12,"item":{"type":"message","id":"msg_12","status":"in_progress","role":"assistant","content":[]}}
+
+event: response.content_part.added
+data: {"type":"response.content_part.added","sequence_number":99,"item_id":"msg_12","output_index":12,"content_index":0,"part":{"type":"output_text","text":"","annotations":[],"logprobs":[]}}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":100,"item_id":"msg_12","output_index":12,"content_index":0,"delta":"Microsoft shook up its AI stack by integrating Anthropic's models into Copilot for Microsoft 365, reducing OpenAI dependency and boosting productivity tools like real-time","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":101,"item_id":"msg_12","output_index":12,"content_index":0,"delta":" analytics.","logprobs":[]}
+
+event: response.output_text.done
+data: {"type":"response.output_text.done","sequence_number":102,"item_id":"msg_12","output_index":12,"content_index":0,"text":"Microsoft shook up its AI stack by integrating Anthropic's models into Copilot for Microsoft 365, reducing OpenAI dependency and boosting productivity tools like real-time analytics.","logprobs":[]}
+
+event: response.content_part.done
+data: {"type":"response.content_part.done","sequence_number":103,"item_id":"msg_12","output_index":12,"content_index":0,"part":{"type":"output_text","text":"Microsoft shook up its AI stack by integrating Anthropic's models into Copilot for Microsoft 365, reducing OpenAI dependency and boosting productivity tools like real-time analytics.","annotations":[],"logprobs":[]}}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","sequence_number":104,"output_index":12,"item":{"type":"message","id":"msg_12","status":"completed","role":"assistant","content":[{"type":"output_text","text":"Microsoft shook up its AI stack by integrating Anthropic's models into Copilot for Microsoft 365, reducing OpenAI dependency and boosting productivity tools like real-time analytics.","annotations":[],"logprobs":[]}]}}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","sequence_number":105,"output_index":13,"item":{"type":"message","id":"msg_13","status":"in_progress","role":"assistant","content":[]}}
+
+event: response.content_part.added
+data: {"type":"response.content_part.added","sequence_number":106,"item_id":"msg_13","output_index":13,"content_index":0,"part":{"type":"output_text","text":"","annotations":[],"logprobs":[]}}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":107,"item_id":"msg_13","output_index":13,"content_index":0,"delta":"\n- ","logprobs":[]}
+
+event: response.output_text.done
+data: {"type":"response.output_text.done","sequence_number":108,"item_id":"msg_13","output_index":13,"content_index":0,"text":"\n- ","logprobs":[]}
+
+event: response.content_part.done
+data: {"type":"response.content_part.done","sequence_number":109,"item_id":"msg_13","output_index":13,"content_index":0,"part":{"type":"output_text","text":"\n- ","annotations":[],"logprobs":[]}}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","sequence_number":110,"output_index":13,"item":{"type":"message","id":"msg_13","status":"completed","role":"assistant","content":[{"type":"output_text","text":"\n- ","annotations":[],"logprobs":[]}]}}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","sequence_number":111,"output_index":14,"item":{"type":"message","id":"msg_14","status":"in_progress","role":"assistant","content":[]}}
+
+event: response.content_part.added
+data: {"type":"response.content_part.added","sequence_number":112,"item_id":"msg_14","output_index":14,"content_index":0,"part":{"type":"output_text","text":"","annotations":[],"logprobs":[]}}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":113,"item_id":"msg_14","output_index":14,"content_index":0,"delta":"Oracle followed with a $15 billion bond raise for cloud expansion, riding AI demand waves.","logprobs":[]}
+
+event: response.output_text.done
+data: {"type":"response.output_text.done","sequence_number":114,"item_id":"msg_14","output_index":14,"content_index":0,"text":"Oracle followed with a $15 billion bond raise for cloud expansion, riding AI demand waves.","logprobs":[]}
+
+event: response.content_part.done
+data: {"type":"response.content_part.done","sequence_number":115,"item_id":"msg_14","output_index":14,"content_index":0,"part":{"type":"output_text","text":"Oracle followed with a $15 billion bond raise for cloud expansion, riding AI demand waves.","annotations":[],"logprobs":[]}}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","sequence_number":116,"output_index":14,"item":{"type":"message","id":"msg_14","status":"completed","role":"assistant","content":[{"type":"output_text","text":"Oracle followed with a $15 billion bond raise for cloud expansion, riding AI demand waves.","annotations":[],"logprobs":[]}]}}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","sequence_number":117,"output_index":15,"item":{"type":"message","id":"msg_15","status":"in_progress","role":"assistant","content":[]}}
+
+event: response.content_part.added
+data: {"type":"response.content_part.added","sequence_number":118,"item_id":"msg_15","output_index":15,"content_index":0,"part":{"type":"output_text","text":"","annotations":[],"logprobs":[]}}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":119,"item_id":"msg_15","output_index":15,"content_index":0,"delta":"\n- ","logprobs":[]}
+
+event: response.output_text.done
+data: {"type":"response.output_text.done","sequence_number":120,"item_id":"msg_15","output_index":15,"content_index":0,"text":"\n- ","logprobs":[]}
+
+event: response.content_part.done
+data: {"type":"response.content_part.done","sequence_number":121,"item_id":"msg_15","output_index":15,"content_index":0,"part":{"type":"output_text","text":"\n- ","annotations":[],"logprobs":[]}}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","sequence_number":122,"output_index":15,"item":{"type":"message","id":"msg_15","status":"completed","role":"assistant","content":[{"type":"output_text","text":"\n- ","annotations":[],"logprobs":[]}]}}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","sequence_number":123,"output_index":16,"item":{"type":"message","id":"msg_16","status":"in_progress","role":"assistant","content":[]}}
+
+event: response.content_part.added
+data: {"type":"response.content_part.added","sequence_number":124,"item_id":"msg_16","output_index":16,"content_index":0,"part":{"type":"output_text","text":"","annotations":[],"logprobs":[]}}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":125,"item_id":"msg_16","output_index":16,"content_index":0,"delta":"Google launched Mixboard, an AI mood board app with Gemini-powered suggestions for designers, and rolled conversational editing to more Android phones in","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":126,"item_id":"msg_16","output_index":16,"content_index":0,"delta":" Photos.","logprobs":[]}
+
+event: response.output_text.done
+data: {"type":"response.output_text.done","sequence_number":127,"item_id":"msg_16","output_index":16,"content_index":0,"text":"Google launched Mixboard, an AI mood board app with Gemini-powered suggestions for designers, and rolled conversational editing to more Android phones in Photos.","logprobs":[]}
+
+event: response.content_part.done
+data: {"type":"response.content_part.done","sequence_number":128,"item_id":"msg_16","output_index":16,"content_index":0,"part":{"type":"output_text","text":"Google launched Mixboard, an AI mood board app with Gemini-powered suggestions for designers, and rolled conversational editing to more Android phones in Photos.","annotations":[],"logprobs":[]}}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","sequence_number":129,"output_index":16,"item":{"type":"message","id":"msg_16","status":"completed","role":"assistant","content":[{"type":"output_text","text":"Google launched Mixboard, an AI mood board app with Gemini-powered suggestions for designers, and rolled conversational editing to more Android phones in Photos.","annotations":[],"logprobs":[]}]}}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","sequence_number":130,"output_index":17,"item":{"type":"message","id":"msg_17","status":"in_progress","role":"assistant","content":[]}}
+
+event: response.content_part.added
+data: {"type":"response.content_part.added","sequence_number":131,"item_id":"msg_17","output_index":17,"content_index":0,"part":{"type":"output_text","text":"","annotations":[],"logprobs":[]}}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":132,"item_id":"msg_17","output_index":17,"content_index":0,"delta":"\n\n## Recent iOS Updates\n","logprobs":[]}
+
+event: response.output_text.done
+data: {"type":"response.output_text.done","sequence_number":133,"item_id":"msg_17","output_index":17,"content_index":0,"text":"\n\n## Recent iOS Updates\n","logprobs":[]}
+
+event: response.content_part.done
+data: {"type":"response.content_part.done","sequence_number":134,"item_id":"msg_17","output_index":17,"content_index":0,"part":{"type":"output_text","text":"\n\n## Recent iOS Updates\n","annotations":[],"logprobs":[]}}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","sequence_number":135,"output_index":17,"item":{"type":"message","id":"msg_17","status":"completed","role":"assistant","content":[{"type":"output_text","text":"\n\n## Recent iOS Updates\n","annotations":[],"logprobs":[]}]}}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","sequence_number":136,"output_index":18,"item":{"type":"message","id":"msg_18","status":"in_progress","role":"assistant","content":[]}}
+
+event: response.content_part.added
+data: {"type":"response.content_part.added","sequence_number":137,"item_id":"msg_18","output_index":18,"content_index":0,"part":{"type":"output_text","text":"","annotations":[],"logprobs":[]}}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":138,"item_id":"msg_18","output_index":18,"content_index":0,"delta":"With iOS 26 officially launched, Apple is moving forward with iOS 26.1.","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":139,"item_id":"msg_18","output_index":18,"content_index":0,"delta":" Apple released iOS 26 on September","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":140,"item_id":"msg_18","output_index":18,"content_index":0,"delta":" 15, bringing the Liquid Glass redesign to","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":141,"item_id":"msg_18","output_index":18,"content_index":0,"delta":" the iPhone.","logprobs":[]}
+
+event: response.output_text.done
+data: {"type":"response.output_text.done","sequence_number":142,"item_id":"msg_18","output_index":18,"content_index":0,"text":"With iOS 26 officially launched, Apple is moving forward with iOS 26.1. Apple released iOS 26 on September 15, bringing the Liquid Glass redesign to the iPhone.","logprobs":[]}
+
+event: response.content_part.done
+data: {"type":"response.content_part.done","sequence_number":143,"item_id":"msg_18","output_index":18,"content_index":0,"part":{"type":"output_text","text":"With iOS 26 officially launched, Apple is moving forward with iOS 26.1. Apple released iOS 26 on September 15, bringing the Liquid Glass redesign to the iPhone.","annotations":[],"logprobs":[]}}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","sequence_number":144,"output_index":18,"item":{"type":"message","id":"msg_18","status":"completed","role":"assistant","content":[{"type":"output_text","text":"With iOS 26 officially launched, Apple is moving forward with iOS 26.1. Apple released iOS 26 on September 15, bringing the Liquid Glass redesign to the iPhone.","annotations":[],"logprobs":[]}]}}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","sequence_number":145,"output_index":19,"item":{"type":"message","id":"msg_19","status":"in_progress","role":"assistant","content":[]}}
+
+event: response.content_part.added
+data: {"type":"response.content_part.added","sequence_number":146,"item_id":"msg_19","output_index":19,"content_index":0,"part":{"type":"output_text","text":"","annotations":[],"logprobs":[]}}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":147,"item_id":"msg_19","output_index":19,"content_index":0,"delta":"\n\nThe main tech story today appears to be Apple's significant","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":148,"item_id":"msg_19","output_index":19,"content_index":0,"delta":" retail milestone with the reopening of their redes","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":149,"item_id":"msg_19","output_index":19,"content_index":0,"delta":"igned flagship Ginza store in Tokyo, marking over","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":150,"item_id":"msg_19","output_index":19,"content_index":0,"delta":" 20 years since their first international","logprobs":[]}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","sequence_number":151,"item_id":"msg_19","output_index":19,"content_index":0,"delta":" retail expansion.","logprobs":[]}
+
+event: response.output_text.done
+data: {"type":"response.output_text.done","sequence_number":152,"item_id":"msg_19","output_index":19,"content_index":0,"text":"\n\nThe main tech story today appears to be Apple's significant retail milestone with the reopening of their redesigned flagship Ginza store in Tokyo, marking over 20 years since their first international retail expansion.","logprobs":[]}
+
+event: response.content_part.done
+data: {"type":"response.content_part.done","sequence_number":153,"item_id":"msg_19","output_index":19,"content_index":0,"part":{"type":"output_text","text":"\n\nThe main tech story today appears to be Apple's significant retail milestone with the reopening of their redesigned flagship Ginza store in Tokyo, marking over 20 years since their first international retail expansion.","annotations":[],"logprobs":[]}}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","sequence_number":154,"output_index":19,"item":{"type":"message","id":"msg_19","status":"completed","role":"assistant","content":[{"type":"output_text","text":"\n\nThe main tech story today appears to be Apple's significant retail milestone with the reopening of their redesigned flagship Ginza store in Tokyo, marking over 20 years since their first international retail expansion.","annotations":[],"logprobs":[]}]}}
+
+event: response.completed
+data: {"type":"response.completed","sequence_number":155,"response":{"id":"resp_01LHpEgU4KbfgXGVi3UtHQY1","object":"response","created_at":1767225600,"status":"completed","error":null,"incomplete_details":null,"model":"claude-sonnet-4-20250514","output":[{"type":"web_search_call","id":"srvtoolu_01Bj5uzzLcYG5hfueSLcDH8k","status":"completed","action":{"type":"search","query":"tech news today September 26 2025","queries":["tech news today September 26 2025"]}},{"type":"message","id":"msg_1","status":"completed","role":"assistant","content":[{"type":"output_text","text":"Based on my search results, here are the key tech news developments from today (September 26, 2025):\n\n## Apple News\n","annotations":[],"logprobs":[]}]},{"type":"message","id":"msg_2","status":"completed","role":"assistant","content":[{"type":"output_text","text":"Apple today announced the grand reopening of Apple Ginza on Friday, September 26, located in the vibrant Ginza district where Apple's retail journey in Japan began more than two decades ago. Apple Ginza opens to customers Friday, September 26, at 10 a.m. JST.","annotations":[],"logprobs":[]}]},{"type":"message","id":"msg_3","status":"completed","role":"assistant","content":[{"type":"output_text","text":" ","annotations":[],"logprobs":[]}]},{"type":"message","id":"msg_4","status":"completed","role":"assistant","content":[{"type":"output_text","text":"Opened in 2003 as Apple's first store outside the U.S., Apple Ginza now returns in an all-new four-story design that brings together the best of Apple's products, services, and experiences in one beautifully reimagined space.","annotations":[],"logprobs":[]}]},{"type":"message","id":"msg_5","status":"completed","role":"assistant","content":[{"type":"output_text","text":"\n\n## Recent Apple Product Updates\n","annotations":[],"logprobs":[]}]},{"type":"message","id":"msg_6","status":"completed","role":"assistant","content":[{"type":"output_text","text":"Apple is considering building a pilot production line for a foldable iPhone in Taiwan, with plans to launch the new foldable iPhone in 2026. Currently, multiple sources have confirmed that Apple plans to release its first foldable iPhone in 2026 as part of the iPhone 18 lineup.","annotations":[],"logprobs":[]}]},{"type":"message","id":"msg_7","status":"completed","role":"assistant","content":[{"type":"output_text","text":"\n\n","annotations":[],"logprobs":[]}]},{"type":"message","id":"msg_8","status":"completed","role":"assistant","content":[{"type":"output_text","text":"OpenAI launches ChatGPT Pulse, proactively writing your morning briefing. OpenAI is rolling out a new feature in ChatGPT called Pulse, which generates personalized reports while users sleep. Pulse provides users with a quick overview of their day with 5-10 briefings, designed to encourage them to check ChatGPT first thing in the morning.","annotations":[],"logprobs":[]}]},{"type":"message","id":"msg_9","status":"completed","role":"assistant","content":[{"type":"output_text","text":"\n\n## Major Tech Industry Developments from Yesterday\n\n","annotations":[],"logprobs":[]}]},{"type":"message","id":"msg_10","status":"completed","role":"assistant","content":[{"type":"output_text","text":"On September 25, 2025, headlines were dominated by seismic shifts in AI infrastructure, potential blockbuster partnerships between legacy chip giants, and escalating regulatory battles that could redefine global innovation.","annotations":[],"logprobs":[]}]},{"type":"message","id":"msg_11","status":"completed","role":"assistant","content":[{"type":"output_text","text":"\n\nKey highlights include:\n- ","annotations":[],"logprobs":[]}]},{"type":"message","id":"msg_12","status":"completed","role":"assistant","content":[{"type":"output_text","text":"Microsoft shook up its AI stack by integrating Anthropic's models into Copilot for Microsoft 365, reducing OpenAI dependency and boosting productivity tools like real-time analytics.","annotations":[],"logprobs":[]}]},{"type":"message","id":"msg_13","status":"completed","role":"assistant","content":[{"type":"output_text","text":"\n- ","annotations":[],"logprobs":[]}]},{"type":"message","id":"msg_14","status":"completed","role":"assistant","content":[{"type":"output_text","text":"Oracle followed with a $15 billion bond raise for cloud expansion, riding AI demand waves.","annotations":[],"logprobs":[]}]},{"type":"message","id":"msg_15","status":"completed","role":"assistant","content":[{"type":"output_text","text":"\n- ","annotations":[],"logprobs":[]}]},{"type":"message","id":"msg_16","status":"completed","role":"assistant","content":[{"type":"output_text","text":"Google launched Mixboard, an AI mood board app with Gemini-powered suggestions for designers, and rolled conversational editing to more Android phones in Photos.","annotations":[],"logprobs":[]}]},{"type":"message","id":"msg_17","status":"completed","role":"assistant","content":[{"type":"output_text","text":"\n\n## Recent iOS Updates\n","annotations":[],"logprobs":[]}]},{"type":"message","id":"msg_18","status":"completed","role":"assistant","content":[{"type":"output_text","text":"With iOS 26 officially launched, Apple is moving forward with iOS 26.1. Apple released iOS 26 on September 15, bringing the Liquid Glass redesign to the iPhone.","annotations":[],"logprobs":[]}]},{"type":"message","id":"msg_19","status":"completed","role":"assistant","content":[{"type":"output_text","text":"\n\nThe main tech story today appears to be Apple's significant retail milestone with the reopening of their redesigned flagship Ginza store in Tokyo, marking over 20 years since their first international retail expansion.","annotations":[],"logprobs":[]}]}],"instructions":null,"tools":[],"tool_choice":"auto","parallel_tool_calls":true,"temperature":null,"top_p":null,"metadata":{},"store":false,"service_tier":"default","usage":{"input_tokens":15665,"input_tokens_details":{"cached_tokens":0,"cache_write_tokens":0},"output_tokens":795,"output_tokens_details":{"reasoning_tokens":0},"total_tokens":16460}}}
+

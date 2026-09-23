@@ -1,0 +1,40 @@
+{
+  "id": "resp_0191iYfpERYfS27xLsdW2nbb",
+  "object": "response",
+  "created_at": 1767225600,
+  "status": "completed",
+  "error": null,
+  "incomplete_details": null,
+  "model": "claude-haiku-4-5-20251001",
+  "output": [
+    {
+      "type": "function_call",
+      "id": "fc_0",
+      "call_id": "toolu_01Q9ExVZnzZj7E2QQYHYtNUa",
+      "name": "json",
+      "arguments": "{\"elements\":[{\"location\":\"San Francisco\",\"temperature\":-5,\"condition\":\"snowy\"},{\"location\":\"London\",\"temperature\":0,\"condition\":\"snowy\"},{\"location\":\"Paris\",\"temperature\":23,\"condition\":\"cloudy\"},{\"location\":\"Berlin\",\"temperature\":-9,\"condition\":\"snowy\"}]}",
+      "status": "completed"
+    }
+  ],
+  "instructions": null,
+  "tools": [],
+  "tool_choice": "auto",
+  "parallel_tool_calls": true,
+  "temperature": null,
+  "top_p": null,
+  "metadata": {},
+  "store": false,
+  "service_tier": "default",
+  "usage": {
+    "input_tokens": 1151,
+    "input_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0
+    },
+    "output_tokens": 87,
+    "output_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "total_tokens": 1238
+  }
+}

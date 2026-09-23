@@ -1,0 +1,46 @@
+{
+  "id": "resp_01VdEjxAP5ahtHKrrRdNBteQ",
+  "object": "response",
+  "created_at": 1767225600,
+  "status": "completed",
+  "error": null,
+  "incomplete_details": null,
+  "model": "claude-sonnet-4-5-20250929",
+  "output": [
+    {
+      "type": "message",
+      "id": "msg_0",
+      "status": "completed",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "Hello! I'm doing well, thanks for asking. How are you doing today? Is there anything I can help you with?",
+          "annotations": [],
+          "logprobs": []
+        }
+      ]
+    }
+  ],
+  "instructions": null,
+  "tools": [],
+  "tool_choice": "auto",
+  "parallel_tool_calls": true,
+  "temperature": null,
+  "top_p": null,
+  "metadata": {},
+  "store": false,
+  "service_tier": "default",
+  "usage": {
+    "input_tokens": 12,
+    "input_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0
+    },
+    "output_tokens": 29,
+    "output_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "total_tokens": 41
+  }
+}

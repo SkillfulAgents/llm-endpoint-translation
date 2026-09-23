@@ -1,0 +1,46 @@
+{
+  "name": "llm-endpoint-translation",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Bidirectional OpenAI Responses <> Anthropic Messages translation: requests, JSON replies, SSE streams, errors.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "smoke": "npm run build && node scripts/smoke-package.mjs",
+    "spec:sync": "node scripts/sync-openai-spec.mjs",
+    "check": "npm run typecheck && npm run lint && npm run test:coverage && npm run smoke"
+  },
+  "devDependencies": {
+    "@anthropic-ai/sdk": "^0.128.0",
+    "@eslint/js": "^9.39.5",
+    "@types/node": "^20.19.43",
+    "@vitest/coverage-v8": "^3.2.7",
+    "ajv": "^8.20.0",
+    "eslint": "^9.39.5",
+    "openai": "^6.49.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.70.1",
+    "vitest": "^3.2.7",
+    "zod": "^4.6.5"
+  }
+}
