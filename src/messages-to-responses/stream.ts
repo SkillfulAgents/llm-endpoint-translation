@@ -2,6 +2,7 @@
 
 import { reasoningSignature, withSpeedEcho } from "./response.js";
 import { readWithIdleTimeout, STREAM_IDLE_TIMEOUT_MS } from "../shared/idle-read.js";
+import { restoreToolName } from "../shared/tool-names.js";
 import { extractResponsesUsage, type AnthropicUsage } from "./usage.js";
 
 export const RESPONSES_STREAM_IDLE_TIMEOUT_MS = STREAM_IDLE_TIMEOUT_MS;
@@ -19,6 +20,8 @@ export type ResponsesStreamOptions = {
   onServiceTier?: (tier: string) => void;
   /** Sign thinking blocks with the encrypted reasoning for replay under this scope. */
   reasoningReplayScope?: string;
+  /** Shortened → original tool names, from `toolNameRestoreMap(request)`. */
+  toolNames?: Record<string, string>;
 };
 
 export function responsesStreamToMessagesStream(
@@ -32,6 +35,7 @@ export function responsesStreamToMessagesStream(
     options?.model,
     options?.onServiceTier,
     options?.reasoningReplayScope,
+    options?.toolNames,
   );
   const reader = input.getReader();
   let lineBuffer = "";
@@ -119,14 +123,18 @@ class ResponsesTranslatorState {
     cache_read_input_tokens: 0,
   };
   private sawToolCall = false;
+  private sawRefusal = false;
   // Responses item_id → { index, kind }. Each output item is one Anthropic
   // content block.
   private blocks = new Map<string, { index: number; kind: BlockKind }>();
+  // Thinking block index → last summary_index streamed into it.
+  private summaryParts = new Map<number, number>();
 
   constructor(
     private readonly canonicalModel?: string,
     private readonly onServiceTier?: (tier: string) => void,
     private readonly reasoningReplayScope?: string,
+    private readonly toolNames?: Record<string, string>,
   ) {}
   private nextIndex = 0;
   // Latest service_tier snapshot seen — fallback for terminal events whose
@@ -166,6 +174,10 @@ class ResponsesTranslatorState {
         this.onItemAdded(event);
         break;
       case "response.output_text.delta":
+        this.onTextDelta(event);
+        break;
+      case "response.refusal.delta":
+        this.sawRefusal = true;
         this.onTextDelta(event);
         break;
       // The summary stream is what surfaces when we request `reasoning.summary`;
@@ -247,7 +259,7 @@ class ResponsesTranslatorState {
       this.openBlock(itemId, "tool_use", {
         type: "tool_use",
         id: typeof item.call_id === "string" ? item.call_id : itemId,
-        name: typeof item.name === "string" ? item.name : "",
+        name: typeof item.name === "string" ? restoreToolName(item.name, this.toolNames) : "",
         input: {},
       });
     }
@@ -293,6 +305,20 @@ class ResponsesTranslatorState {
       type: "thinking",
       thinking: "",
     });
+    // Separate summary parts the same way the JSON reply joins them.
+    if (typeof event.summary_index === "number") {
+      const last = this.summaryParts.get(block.index);
+      if (last !== undefined && last !== event.summary_index) {
+        this.pending.push(
+          sseEvent("content_block_delta", {
+            type: "content_block_delta",
+            index: block.index,
+            delta: { type: "thinking_delta", thinking: "\n\n" },
+          }),
+        );
+      }
+      this.summaryParts.set(block.index, event.summary_index);
+    }
     this.pending.push(
       sseEvent("content_block_delta", {
         type: "content_block_delta",
@@ -420,9 +446,11 @@ class ResponsesTranslatorState {
   }
 
   finish(
-    stopReason: "end_turn" | "max_tokens" | "tool_use" = this.sawToolCall
-      ? "tool_use"
-      : "end_turn",
+    stopReason: "end_turn" | "max_tokens" | "tool_use" | "refusal" = this.sawRefusal
+      ? "refusal"
+      : this.sawToolCall
+        ? "tool_use"
+        : "end_turn",
   ): void {
     if (this.finishedMessage) return;
     if (!this.startedMessage) this.emitMessageStart();

@@ -6,6 +6,7 @@ import {
   extractChatCompletionsUsage as translateChatUsage,
 } from "./response.js";
 import { chatCompletionsStreamToMessagesStream } from "./stream.js";
+import { shortenToolName, toolNameRestoreMap } from "../shared/tool-names.js";
 
 // Positional shims over the options API so ported cases stay diffable against the original suite.
 const chatCompletionsResponseToAnthropic = (body: Record<string, unknown>, model?: string) =>
@@ -448,5 +449,203 @@ describe("chatCompletionsSSEToAnthropicSSE", () => {
     expect((err.error as Record<string, unknown>).type).toBe("overloaded_error");
     // Open blocks are closed so the SDK's block state stays consistent.
     expect(events.some((e) => e.type === "content_block_stop")).toBe(true);
+  });
+});
+
+describe("anthropicRequestToChatCompletions — tool_choice none, documents, long tool names, thinking budget", () => {
+  const tools = [{ name: "Bash", input_schema: { type: "object", properties: {} } }];
+  const PDF = "JVBERi0xLjQK";
+
+  it("sends tool_choice none instead of omitting it (omitted means auto)", () => {
+    const out = anthropicRequestToChatCompletions({ model: "m", messages: [], tools, tool_choice: { type: "none" } });
+    expect(out.tool_choice).toBe("none");
+  });
+
+  it("omits tool_choice none when no function tools are sent", () => {
+    const out = anthropicRequestToChatCompletions({ model: "m", messages: [], tool_choice: { type: "none" } });
+    expect(out.tool_choice).toBeUndefined();
+  });
+
+  it("maps user documents to file parts, url documents to a text note, text documents to text", () => {
+    const out = anthropicRequestToChatCompletions({
+      model: "m",
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: "Summarize" },
+            { type: "document", title: "spec.pdf", source: { type: "base64", media_type: "application/pdf", data: PDF } },
+            { type: "document", source: { type: "url", url: "https://example.com/a.pdf" } },
+            { type: "document", source: { type: "text", media_type: "text/plain", data: "plain doc" } },
+          ],
+        },
+      ],
+    });
+    expect(out.messages).toEqual([
+      {
+        role: "user",
+        content: [
+          { type: "text", text: "Summarize" },
+          { type: "file", file: { filename: "spec.pdf", file_data: `data:application/pdf;base64,${PDF}` } },
+          { type: "text", text: "[document: https://example.com/a.pdf]" },
+          { type: "text", text: "plain doc" },
+        ],
+      },
+    ]);
+  });
+
+  it("moves tool_result documents to a follow-up user message (tool content is text-only)", () => {
+    const out = anthropicRequestToChatCompletions({
+      model: "m",
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "tool_result",
+              tool_use_id: "t1",
+              content: [
+                { type: "text", text: "Read 2 pages" },
+                { type: "document", source: { type: "base64", media_type: "application/pdf", data: PDF } },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    expect(out.messages).toEqual([
+      { role: "tool", tool_call_id: "t1", content: "Read 2 pages" },
+      {
+        role: "user",
+        content: [
+          { type: "text", text: "[document output from tool t1]" },
+          { type: "file", file: { filename: "document.pdf", file_data: `data:application/pdf;base64,${PDF}` } },
+        ],
+      },
+    ]);
+  });
+
+  it("shortens tool names over 64 chars across tools, history, and tool_choice", () => {
+    const long = `mcp__${"server".repeat(8)}__${"tool".repeat(6)}`;
+    const short = shortenToolName(long);
+    const out = anthropicRequestToChatCompletions({
+      model: "m",
+      tools: [{ name: long, input_schema: { type: "object", properties: {} } }],
+      tool_choice: { type: "tool", name: long },
+      messages: [
+        { role: "user", content: "go" },
+        { role: "assistant", content: [{ type: "tool_use", id: "t1", name: long, input: {} }] },
+      ],
+    });
+    expect((out.tools as Array<{ function: { name: string } }>)[0].function.name).toBe(short);
+    expect(out.tool_choice).toEqual({ type: "function", function: { name: short } });
+    const history = out.messages as Array<{ tool_calls?: Array<{ function: { name: string } }> }>;
+    expect(history[1].tool_calls?.[0].function.name).toBe(short);
+  });
+
+  it("maps thinking.budget_tokens onto reasoning_effort when no explicit effort is set", () => {
+    const out = anthropicRequestToChatCompletions({
+      model: "m",
+      messages: [],
+      thinking: { type: "enabled", budget_tokens: 3000 },
+    });
+    expect(out.reasoning_effort).toBe("medium");
+  });
+
+  it("keeps an unknown explicit effort dropped rather than falling back to the budget", () => {
+    const out = anthropicRequestToChatCompletions({
+      model: "m",
+      messages: [],
+      thinking: { type: "enabled", budget_tokens: 30000 },
+      output_config: { effort: "bogus" },
+    });
+    expect(out.reasoning_effort).toBeUndefined();
+  });
+});
+
+describe("chatCompletionsResponseToAnthropic — refusals and restored tool names", () => {
+  it("surfaces message.refusal as text with stop_reason refusal", () => {
+    const out = chatCompletionsResponseToAnthropic({
+      id: "c",
+      choices: [{ finish_reason: "stop", message: { role: "assistant", content: null, refusal: "I can't help." } }],
+    });
+    expect(out.content).toEqual([{ type: "text", text: "I can't help." }]);
+    expect(out.stop_reason).toBe("refusal");
+  });
+
+  it("maps finish_reason content_filter to refusal", () => {
+    const out = chatCompletionsResponseToAnthropic({
+      id: "c",
+      choices: [{ finish_reason: "content_filter", message: { role: "assistant", content: "" } }],
+    });
+    expect(out.stop_reason).toBe("refusal");
+  });
+
+  it("restores shortened tool names from toolNames", () => {
+    const long = "q".repeat(70);
+    const out = chatCompletionsResponseToMessages(
+      {
+        id: "c",
+        choices: [
+          {
+            finish_reason: "tool_calls",
+            message: { tool_calls: [{ id: "k1", type: "function", function: { name: shortenToolName(long), arguments: "{}" } }] },
+          },
+        ],
+      },
+      { toolNames: toolNameRestoreMap({ tools: [{ name: long }] }) },
+    );
+    expect(out.content).toEqual([{ type: "tool_use", id: "k1", name: long, input: {} }]);
+  });
+});
+
+describe("chatCompletionsStreamToMessagesStream — refusals and restored tool names", () => {
+  const sse = (chunks: unknown[]) =>
+    new Response(chunks.map((c) => `data: ${JSON.stringify(c)}\n\n`).join("") + "data: [DONE]\n\n").body!;
+  const frames = async (stream: ReadableStream<Uint8Array>) =>
+    (await new Response(stream).text())
+      .split("\n")
+      .filter((l) => l.startsWith("data:"))
+      .map((l) => JSON.parse(l.slice(5)) as { type: string; delta?: { type?: string; text?: string; thinking?: string; stop_reason?: string }; content_block?: Record<string, unknown> });
+  const usage = { prompt_tokens: 1, completion_tokens: 1 };
+
+  it("streams delta.refusal as text and stops with refusal", async () => {
+    const out = await frames(
+      chatCompletionsSSEToAnthropicSSE(
+        sse([
+          { id: "c", model: "m", choices: [{ index: 0, delta: { role: "assistant", refusal: "I can't " } }] },
+          { id: "c", model: "m", choices: [{ index: 0, delta: { refusal: "help." }, finish_reason: "stop" }], usage },
+        ]),
+      ),
+    );
+    expect(out.filter((f) => f.delta?.type === "text_delta").map((f) => f.delta?.text).join("")).toBe("I can't help.");
+    expect(out.find((f) => f.type === "message_delta")?.delta?.stop_reason).toBe("refusal");
+  });
+
+  it("maps a streamed content_filter finish to refusal", async () => {
+    const out = await frames(
+      chatCompletionsSSEToAnthropicSSE(
+        sse([{ id: "c", model: "m", choices: [{ index: 0, delta: { content: "Hm" }, finish_reason: "content_filter" }], usage }]),
+      ),
+    );
+    expect(out.find((f) => f.type === "message_delta")?.delta?.stop_reason).toBe("refusal");
+  });
+
+  it("restores shortened tool names on tool_use block starts", async () => {
+    const long = "w".repeat(100);
+    const out = await frames(
+      chatCompletionsStreamToMessagesStream(
+        sse([
+          {
+            id: "c",
+            model: "m",
+            choices: [{ index: 0, delta: { tool_calls: [{ index: 0, id: "k1", function: { name: shortenToolName(long), arguments: "{}" } }] } }],
+          },
+          { id: "c", model: "m", choices: [{ index: 0, delta: {}, finish_reason: "tool_calls" }], usage },
+        ]),
+        { toolNames: toolNameRestoreMap({ tools: [{ name: long }] }) },
+      ),
+    );
+    expect(out.find((f) => f.type === "content_block_start")?.content_block).toMatchObject({ type: "tool_use", name: long });
   });
 });

@@ -64,6 +64,33 @@ describe("@anthropic-ai/sdk MessageStream consumes translated Responses streams"
     expect(final.stop_reason).toBe(fromJson.stop_reason);
     expect(final.usage).toMatchObject(fromJson.usage as Json);
   });
+
+  it("accepts a refusal stream and matches the JSON translation", async () => {
+    const response = {
+      id: "r",
+      status: "completed",
+      output: [{ id: "msg", type: "message", content: [{ type: "refusal", refusal: "I can't help." }] }],
+      usage: { input_tokens: 3, output_tokens: 2 },
+    };
+    const source = [
+      { type: "response.created", response: { id: "r", model: "m" } },
+      { type: "response.output_item.added", item: { id: "msg", type: "message" } },
+      { type: "response.refusal.delta", item_id: "msg", delta: "I can't help." },
+      { type: "response.output_item.done", item: response.output[0] },
+      { type: "response.completed", response },
+    ];
+    const client = anthropicClient(() => ({
+      body: responsesStreamToMessagesStream(streamFromPayloads(source, 53)),
+      contentType: sse,
+    }));
+    const final = await client.messages
+      .stream({ model: "m", max_tokens: 1024, messages: [{ role: "user", content: "x" }] })
+      .finalMessage();
+    const fromJson = responsesResponseToMessages(response);
+    expect(final.stop_reason).toBe("refusal");
+    expect(final.content).toEqual(fromJson.content);
+    expect(fromJson.stop_reason).toBe("refusal");
+  });
 });
 
 describe("@anthropic-ai/sdk MessageStream consumes translated Chat Completions streams", () => {
