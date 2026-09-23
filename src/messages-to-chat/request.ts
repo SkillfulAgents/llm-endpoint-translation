@@ -1,13 +1,18 @@
 // Anthropic Messages request → OpenAI Chat Completions request.
 
 import {
+  anthropicDocument,
   anthropicImageToUrl,
   extractMidTurnSteers,
   messageContentToText,
   splitSteerSystemText,
+  splitToolResultContent,
   systemToText,
+  type AnthropicDocument,
 } from "../shared/content.js";
+import { effortFromThinkingBudget } from "../shared/effort.js";
 import { readAnthropicJsonSchemaFormat, toChatResponseFormat } from "../shared/structured-output.js";
+import { shortenToolName } from "../shared/tool-names.js";
 
 const CHAT_EFFORT_LEVELS = new Set(["low", "medium", "high", "xhigh", "max"]);
 
@@ -36,9 +41,8 @@ export function mapChatReasoningEffort(
   }
   const outputConfig = body.output_config as { effort?: unknown } | undefined;
   const effort = outputConfig?.effort;
-  return typeof effort === "string" && CHAT_EFFORT_LEVELS.has(effort)
-    ? effort
-    : undefined;
+  if (typeof effort === "string") return CHAT_EFFORT_LEVELS.has(effort) ? effort : undefined;
+  return effortFromThinkingBudget(body);
 }
 
 export function messagesRequestToChatCompletions(
@@ -141,8 +145,13 @@ function pushUserBlocks(
       if (url) userParts.push({ type: "image_url", image_url: { url } });
       continue;
     }
+    if (block.type === "document") {
+      const doc = anthropicDocument(block);
+      if (doc) userParts.push(documentPart(doc));
+      continue;
+    }
     if (block.type === "tool_result" && typeof block.tool_use_id === "string") {
-      const { text, imageUrls } = splitToolResultContent(block.content);
+      const { text, imageUrls, documents } = splitToolResultContent(block.content);
       const { cleaned, steers } = extractMidTurnSteers(text);
       out.push({
         role: "tool",
@@ -152,7 +161,7 @@ function pushUserBlocks(
       // Mid-turn user messages ride inside tool results as <system-reminder>
       // for Claude; other models treat tool output as data — re-surface them.
       for (const steer of steers) followUps.push({ role: "user", content: steer });
-      // `tool` content is a string and can't carry images — surface them as a
+      // `tool` content is text-only — surface images and documents as a
       // follow-up user message the model can actually see.
       if (imageUrls.length > 0) {
         followUps.push({
@@ -160,6 +169,15 @@ function pushUserBlocks(
           content: [
             { type: "text", text: `[image output from tool ${block.tool_use_id}]` },
             ...imageUrls.map((url) => ({ type: "image_url", image_url: { url } })),
+          ],
+        });
+      }
+      if (documents.length > 0) {
+        followUps.push({
+          role: "user",
+          content: [
+            { type: "text", text: `[document output from tool ${block.tool_use_id}]` },
+            ...documents.map(documentPart),
           ],
         });
       }
@@ -196,7 +214,7 @@ function pushAssistantBlocks(
         id: block.id,
         type: "function",
         function: {
-          name: typeof block.name === "string" ? block.name : "",
+          name: typeof block.name === "string" ? shortenToolName(block.name) : "",
           arguments: JSON.stringify(block.input ?? {}),
         },
       });
@@ -209,28 +227,13 @@ function pushAssistantBlocks(
   out.push(msg);
 }
 
-function splitToolResultContent(content: unknown): {
-  text: string;
-  imageUrls: string[];
-} {
-  if (typeof content === "string") return { text: content, imageUrls: [] };
-  if (!Array.isArray(content)) {
-    return { text: content == null ? "" : JSON.stringify(content), imageUrls: [] };
+// Chat `file` parts take inline data only; a URL document can only be named in text.
+function documentPart(doc: AnthropicDocument): Record<string, unknown> {
+  if (doc.kind === "file") {
+    return { type: "file", file: { filename: doc.filename, file_data: doc.dataUrl } };
   }
-  const textParts: string[] = [];
-  const imageUrls: string[] = [];
-  for (const block of content as Array<Record<string, unknown>>) {
-    if (!block || typeof block !== "object") continue;
-    if (block.type === "text" && typeof block.text === "string") {
-      textParts.push(block.text);
-    } else if (block.type === "image") {
-      const url = anthropicImageToUrl(block.source);
-      if (url) imageUrls.push(url);
-    } else {
-      textParts.push(JSON.stringify(block));
-    }
-  }
-  return { text: textParts.join("\n\n"), imageUrls };
+  if (doc.kind === "url") return { type: "text", text: `[document: ${doc.url}]` };
+  return { type: "text", text: doc.text };
 }
 
 /** Anthropic tools → Chat Completions function tools. Server tools are skipped. */
@@ -252,7 +255,7 @@ function convertTools(tools: unknown): Array<Record<string, unknown>> {
     out.push({
       type: "function",
       function: {
-        name,
+        name: shortenToolName(name),
         description: typeof tool.description === "string" ? tool.description : "",
         parameters:
           tool.input_schema && typeof tool.input_schema === "object"
@@ -271,13 +274,14 @@ function convertToolChoice(
   if (!choice || typeof choice !== "object") return undefined;
   const c = choice as { type?: unknown; name?: unknown };
   if (c.type === "auto") return "auto";
+  // Omitting `none` would fall back to `auto` and let the model call tools.
+  if (c.type === "none") return tools.length > 0 ? "none" : undefined;
   if (c.type === "any") return tools.length > 0 ? "required" : undefined;
-  if (
-    c.type === "tool" &&
-    typeof c.name === "string" &&
-    tools.some((t) => (t.function as Record<string, unknown>)?.name === c.name)
-  ) {
-    return { type: "function", function: { name: c.name } };
+  if (c.type === "tool" && typeof c.name === "string") {
+    const name = shortenToolName(c.name);
+    if (tools.some((t) => (t.function as Record<string, unknown>)?.name === name)) {
+      return { type: "function", function: { name } };
+    }
   }
   return undefined;
 }

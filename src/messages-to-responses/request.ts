@@ -2,23 +2,27 @@
 // Responses accepts reasoning together with function tools, unlike Chat Completions.
 
 import {
+  anthropicDocument,
   anthropicImageToUrl,
   extractMidTurnSteers,
   messageContentToText,
   splitSteerSystemText,
+  splitToolResultContent,
   systemToText,
+  type AnthropicDocument,
+  type ImageOmit,
 } from "../shared/content.js";
 import { defaultEffortMapper, type EffortMapper } from "../shared/effort.js";
 import {
   readAnthropicJsonSchemaFormat,
   toResponsesTextFormat,
 } from "../shared/structured-output.js";
+import { shortenToolName } from "../shared/tool-names.js";
 import { decodeReasoningSignature } from "./reasoning-replay.js";
 
-export type ServiceTier = "flex" | "priority";
+export type { ImageOmit } from "../shared/content.js";
 
-/** Return value from `mapImageSource` — omit the image and surface `reason` as text. */
-export type ImageOmit = { reason: string; mediaType?: string };
+export type ServiceTier = "flex" | "priority";
 
 export type ResponsesRequestOptions = {
   /** Per-model effort vocabulary; defaults to `defaultEffortMapper`. */
@@ -75,7 +79,7 @@ export function messagesRequestToResponses(
       .filter((t) => t.type === "function" && typeof t.name === "string")
       .map((t) => t.name as string),
   );
-  const toolChoice = convertToolChoice(body.tool_choice, functionNames);
+  const toolChoice = convertToolChoice(body.tool_choice, functionNames, tools.length > 0);
   if (toolChoice !== undefined) out.tool_choice = toolChoice;
 
   // Responses accepts reasoning + tools together (the whole reason this codec
@@ -203,16 +207,28 @@ function pushUserBlocks(
       pushResolvedImage(userParts, block.source, options?.mapImageSource);
       continue;
     }
+    if (block.type === "document") {
+      const doc = anthropicDocument(block);
+      if (doc) userParts.push(documentPart(doc));
+      continue;
+    }
     if (block.type === "tool_result" && typeof block.tool_use_id === "string") {
-      const { text, imageUrls, omittedNotes } = splitToolResultContent(
+      const { text, imageUrls, omittedNotes, documents } = splitToolResultContent(
         block.content,
         options?.mapImageSource,
       );
       const { cleaned, steers } = extractMidTurnSteers(text);
+      // `output` may be a part array; documents ride there as input_file.
       input.push({
         type: "function_call_output",
         call_id: block.tool_use_id,
-        output: cleaned,
+        output:
+          documents.length > 0
+            ? [
+                ...(cleaned ? [{ type: "input_text", text: cleaned }] : []),
+                ...documents.map(documentPart),
+              ]
+            : cleaned,
       });
       // Claude Code delivers mid-turn user messages as a <system-reminder>
       // appended to the tool result. Claude is trained on that convention;
@@ -225,10 +241,7 @@ function pushUserBlocks(
           content: [{ type: "input_text", text: steer }],
         });
       }
-      // Responses `function_call_output.output` is a string and can't carry
-      // images, so surface any tool-result images as a follow-up user message
-      // the model can actually see (else GPT only gets the text and "reads"
-      // nothing). Mirrors litellm's chat-adapter handling (PR #25476).
+      // Tool-result images go in a follow-up user message the model can see.
       if (imageUrls.length > 0 || omittedNotes.length > 0) {
         input.push({
           role: "user",
@@ -267,6 +280,12 @@ function pushResolvedImage(
   if (url) parts.push({ type: "input_image", image_url: url, detail: "high" });
 }
 
+function documentPart(doc: AnthropicDocument): Record<string, unknown> {
+  if (doc.kind === "file") return { type: "input_file", filename: doc.filename, file_data: doc.dataUrl };
+  if (doc.kind === "url") return { type: "input_file", file_url: doc.url };
+  return { type: "input_text", text: doc.text };
+}
+
 /**
  * Items are emitted in block order because the Responses API pairs a replayed
  * `reasoning` item with the item that immediately follows it. A reasoning
@@ -300,7 +319,7 @@ function pushAssistantBlocks(
     }
     if (block.type === "tool_use" && typeof block.id === "string") {
       flushText();
-      const name = typeof block.name === "string" ? block.name : "";
+      const name = typeof block.name === "string" ? shortenToolName(block.name) : "";
       input.push({
         type: "function_call",
         call_id: block.id,
@@ -344,53 +363,6 @@ function hasFollowingItem(
 }
 
 /**
- * Split an Anthropic tool_result `content` into the text that goes in the
- * function_call_output and any image data URLs (surfaced separately as a
- * follow-up user message — see pushUserBlocks). Images must NOT be
- * JSON-stringified into the text output: GPT would receive the base64 as a
- * literal string and "read" nothing.
- */
-function splitToolResultContent(
-  content: unknown,
-  mapImageSource?: (source: unknown) => ImageOmit | null,
-): {
-  text: string;
-  imageUrls: string[];
-  omittedNotes: string[];
-} {
-  if (typeof content === "string") {
-    return { text: content, imageUrls: [], omittedNotes: [] };
-  }
-  if (!Array.isArray(content)) {
-    return {
-      text: content == null ? "" : JSON.stringify(content),
-      imageUrls: [],
-      omittedNotes: [],
-    };
-  }
-  const textParts: string[] = [];
-  const imageUrls: string[] = [];
-  const omittedNotes: string[] = [];
-  for (const block of content as Array<Record<string, unknown>>) {
-    if (!block || typeof block !== "object") continue;
-    if (block.type === "text" && typeof block.text === "string") {
-      textParts.push(block.text);
-    } else if (block.type === "image") {
-      const omitted = mapImageSource?.(block.source) ?? null;
-      if (omitted) {
-        omittedNotes.push(omitted.reason);
-        continue;
-      }
-      const url = anthropicImageToUrl(block.source);
-      if (url) imageUrls.push(url);
-    } else {
-      textParts.push(JSON.stringify(block));
-    }
-  }
-  return { text: textParts.join("\n\n"), imageUrls, omittedNotes };
-}
-
-/**
  * Anthropic tools → Responses tools. Function tools are flat
  * (`{ type:"function", name, description, parameters, strict }`). The Anthropic
  * server `web_search` tool maps to the built-in `{ type:"web_search" }`.
@@ -412,7 +384,7 @@ function convertTools(tools: unknown): Array<Record<string, unknown>> {
       continue;
     }
     if (!name) continue;
-    const fn: Record<string, unknown> = { type: "function", name };
+    const fn: Record<string, unknown> = { type: "function", name: shortenToolName(name) };
     if (typeof tool.description === "string") fn.description = tool.description;
     fn.parameters =
       tool.input_schema && typeof tool.input_schema === "object"
@@ -441,8 +413,8 @@ export function hasWebFetchTool(body: Record<string, unknown>): boolean {
 
 /**
  * Anthropic tool_choice → Responses tool_choice.
- * Anthropic: `{ type: "auto" | "any" | "tool", name? }`
- * Responses: bare string `"auto" | "required"` for the simple modes;
+ * Anthropic: `{ type: "auto" | "any" | "none" | "tool", name? }`
+ * Responses: bare string `"auto" | "required" | "none"` for the simple modes;
  * `{ type: "function", name }` only to force a specific function. The
  * Responses API rejects `{ type: "auto" }` — `type` there names a hosted
  * tool (web_search_preview, …), not a choice mode.
@@ -455,15 +427,19 @@ export function hasWebFetchTool(body: Record<string, unknown>): boolean {
 function convertToolChoice(
   choice: unknown,
   functionNames: Set<string>,
+  hasTools: boolean,
 ): unknown {
   if (!choice || typeof choice !== "object") return undefined;
   const c = choice as { type?: unknown; name?: unknown };
   if (c.type === "auto") return "auto";
+  // Omitting `none` would fall back to `auto` and let the model call tools.
+  if (c.type === "none") return hasTools ? "none" : undefined;
   if (c.type === "any") {
     return functionNames.size > 0 ? "required" : undefined;
   }
-  if (c.type === "tool" && typeof c.name === "string" && functionNames.has(c.name)) {
-    return { type: "function", name: c.name };
+  if (c.type === "tool" && typeof c.name === "string") {
+    const name = shortenToolName(c.name);
+    if (functionNames.has(name)) return { type: "function", name };
   }
   return undefined;
 }

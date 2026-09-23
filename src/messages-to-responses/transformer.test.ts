@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { createEffortMapper } from "../shared/effort.js";
+import { shortenToolName, toolNameRestoreMap } from "../shared/tool-names.js";
 import {
   decodeReasoningSignature,
   encodeReasoningSignature,
@@ -257,13 +258,13 @@ describe("anthropicRequestToResponses — reasoning replay", () => {
     });
     expect(unscoped.include).toBeUndefined();
 
-    // thinking.enabled + budget, no output_config.effort: mapper leaves the
-    // vendor default in effect, but we still need the blob for carry-over.
+    // thinking.enabled without a budget or effort: mapper leaves the vendor
+    // default in effect, but we still need the blob for carry-over.
     const defaultEffort = anthropicRequestToResponses(
       {
         model: "gpt-6-astra",
         messages: [],
-        thinking: { type: "enabled", budget_tokens: 10000 },
+        thinking: { type: "enabled" },
       },
       { reasoningReplayScope: scope },
     );
@@ -274,7 +275,7 @@ describe("anthropicRequestToResponses — reasoning replay", () => {
       {
         model: "grok-4.5",
         messages: [],
-        thinking: { type: "enabled", budget_tokens: 10000 },
+        thinking: { type: "enabled" },
       },
       { reasoningReplayScope: scope, mapReasoningEffort: mapGrokReasoningEffort },
     );
@@ -1446,5 +1447,254 @@ describe("responsesResponseToAnthropic — edge cases", () => {
     expect(out.content).toEqual([
       { type: "tool_use", id: "c1", name: "x", input: {} },
     ]);
+  });
+});
+
+describe("anthropicRequestToResponses — tool_choice none, documents, long tool names, thinking budget", () => {
+  const tools = [{ name: "Bash", input_schema: { type: "object", properties: {} } }];
+  const PDF = "JVBERi0xLjQK";
+
+  it("sends tool_choice none instead of omitting it (omitted means auto)", () => {
+    const out = anthropicRequestToResponses({ model: "m", messages: [], tools, tool_choice: { type: "none" } });
+    expect(out.tool_choice).toBe("none");
+  });
+
+  it("keeps tool_choice none when the only tool is hosted web_search", () => {
+    const out = anthropicRequestToResponses({
+      model: "m",
+      messages: [],
+      tools: [{ type: "web_search_20250305", name: "web_search" }],
+      tool_choice: { type: "none" },
+    });
+    expect(out.tool_choice).toBe("none");
+  });
+
+  it("omits tool_choice none when no tools are sent", () => {
+    const out = anthropicRequestToResponses({ model: "m", messages: [], tool_choice: { type: "none" } });
+    expect(out.tool_choice).toBeUndefined();
+  });
+
+  it("maps user document blocks to input_file (base64 and url) and text documents to input_text", () => {
+    const out = anthropicRequestToResponses({
+      model: "m",
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: "Summarize" },
+            { type: "document", title: "spec.pdf", source: { type: "base64", media_type: "application/pdf", data: PDF } },
+            { type: "document", source: { type: "url", url: "https://example.com/a.pdf" } },
+            { type: "document", source: { type: "text", media_type: "text/plain", data: "plain doc" } },
+            { type: "document", source: { type: "file", file_id: "file_123" } },
+          ],
+        },
+      ],
+    });
+    expect(out.input).toEqual([
+      {
+        role: "user",
+        content: [
+          { type: "input_text", text: "Summarize" },
+          { type: "input_file", filename: "spec.pdf", file_data: `data:application/pdf;base64,${PDF}` },
+          { type: "input_file", file_url: "https://example.com/a.pdf" },
+          { type: "input_text", text: "plain doc" },
+        ],
+      },
+    ]);
+  });
+
+  it("defaults a base64 document's filename to document.pdf", () => {
+    const out = anthropicRequestToResponses({
+      model: "m",
+      messages: [{ role: "user", content: [{ type: "document", source: { type: "base64", media_type: "application/pdf", data: PDF } }] }],
+    });
+    expect((out.input as Array<{ content: unknown[] }>)[0].content[0]).toMatchObject({ filename: "document.pdf" });
+  });
+
+  it("sends tool_result documents as input_file parts of the output, never as base64 text", () => {
+    const out = anthropicRequestToResponses({
+      model: "m",
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "tool_result",
+              tool_use_id: "t1",
+              content: [
+                { type: "text", text: "Read 2 pages" },
+                { type: "document", source: { type: "base64", media_type: "application/pdf", data: PDF } },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    expect(out.input).toEqual([
+      {
+        type: "function_call_output",
+        call_id: "t1",
+        output: [
+          { type: "input_text", text: "Read 2 pages" },
+          { type: "input_file", filename: "document.pdf", file_data: `data:application/pdf;base64,${PDF}` },
+        ],
+      },
+    ]);
+    expect(JSON.stringify(out.input)).not.toContain('"type":"document"');
+  });
+
+  it("keeps a string output when a tool_result document is text-only", () => {
+    const out = anthropicRequestToResponses({
+      model: "m",
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "tool_result",
+              tool_use_id: "t1",
+              content: [{ type: "document", source: { type: "content", content: [{ type: "text", text: "inner" }] } }],
+            },
+          ],
+        },
+      ],
+    });
+    expect(out.input).toEqual([{ type: "function_call_output", call_id: "t1", output: "inner" }]);
+  });
+
+  it("shortens tool names over 64 chars consistently across tools, history, and tool_choice", () => {
+    const long = `mcp__${"server".repeat(8)}__${"tool".repeat(6)}`;
+    const out = anthropicRequestToResponses({
+      model: "m",
+      tools: [{ name: long, input_schema: { type: "object", properties: {} } }],
+      tool_choice: { type: "tool", name: long },
+      messages: [
+        { role: "user", content: "go" },
+        { role: "assistant", content: [{ type: "tool_use", id: "t1", name: long, input: {} }] },
+        { role: "user", content: [{ type: "tool_result", tool_use_id: "t1", content: "ok" }] },
+      ],
+    });
+    const short = shortenToolName(long);
+    expect(long.length).toBeGreaterThan(64);
+    expect(short).toHaveLength(64);
+    expect((out.tools as Array<{ name: string }>)[0].name).toBe(short);
+    expect(out.tool_choice).toEqual({ type: "function", name: short });
+    expect((out.input as Array<Record<string, unknown>>)[1]).toMatchObject({ type: "function_call", name: short });
+    expect(toolNameRestoreMap({ tools: [{ name: long }, { name: "Bash" }] })).toEqual({ [short]: long });
+  });
+
+  it("gives two long names with the same prefix different short names", () => {
+    const prefix = "x".repeat(70);
+    expect(shortenToolName(`${prefix}_a`)).not.toBe(shortenToolName(`${prefix}_b`));
+    expect(shortenToolName("Bash")).toBe("Bash");
+  });
+
+  it("maps thinking.budget_tokens onto reasoning.effort when no explicit effort is set", () => {
+    const out = anthropicRequestToResponses({
+      model: "m",
+      messages: [],
+      thinking: { type: "enabled", budget_tokens: 10000 },
+    });
+    expect(out.reasoning).toEqual({ effort: "high", summary: "auto" });
+  });
+});
+
+describe("responsesResponseToAnthropic — refusals and restored tool names", () => {
+  it("surfaces a refusal part as text with stop_reason refusal", () => {
+    const out = responsesResponseToAnthropic({
+      id: "r",
+      status: "completed",
+      output: [{ type: "message", content: [{ type: "refusal", refusal: "I can't help with that." }] }],
+    });
+    expect(out.content).toEqual([{ type: "text", text: "I can't help with that." }]);
+    expect(out.stop_reason).toBe("refusal");
+  });
+
+  it("keeps max_tokens over refusal for an incomplete response", () => {
+    const out = responsesResponseToAnthropic({
+      id: "r",
+      status: "incomplete",
+      output: [{ type: "message", content: [{ type: "refusal", refusal: "no" }] }],
+    });
+    expect(out.stop_reason).toBe("max_tokens");
+  });
+
+  it("restores shortened tool names from toolNames", () => {
+    const long = "y".repeat(80);
+    const out = responsesResponseToAnthropic(
+      { id: "r", output: [{ type: "function_call", call_id: "c1", name: shortenToolName(long), arguments: "{}" }] },
+      undefined,
+      { toolNames: toolNameRestoreMap({ tools: [{ name: long }] }) },
+    );
+    expect(out.content).toEqual([{ type: "tool_use", id: "c1", name: long, input: {} }]);
+  });
+});
+
+describe("responsesSSEToAnthropicSSE — summary parts, refusals, restored tool names", () => {
+  const sse = (events: unknown[]) =>
+    new Response(events.map((e) => `data: ${JSON.stringify(e)}\n\n`).join("")).body!;
+  const frames = async (stream: ReadableStream<Uint8Array>) =>
+    (await new Response(stream).text())
+      .split("\n")
+      .filter((l) => l.startsWith("data:"))
+      .map((l) => JSON.parse(l.slice(5)) as { type: string; delta?: { type?: string; text?: string; thinking?: string; stop_reason?: string }; content_block?: Record<string, unknown> });
+  const created = { type: "response.created", response: { id: "r", model: "m" } };
+  const completed = { type: "response.completed", response: { usage: { input_tokens: 1, output_tokens: 1 } } };
+
+  it("separates reasoning summary parts with a blank line, matching the JSON reply", async () => {
+    const out = await frames(
+      responsesSSEToAnthropicSSE(
+        sse([
+          created,
+          { type: "response.output_item.added", item: { id: "rs", type: "reasoning" } },
+          { type: "response.reasoning_summary_text.delta", item_id: "rs", summary_index: 0, delta: "First part." },
+          { type: "response.reasoning_summary_text.delta", item_id: "rs", summary_index: 0, delta: " More." },
+          { type: "response.reasoning_summary_text.delta", item_id: "rs", summary_index: 1, delta: "**Second**" },
+          { type: "response.output_item.done", item: { id: "rs", type: "reasoning" } },
+          completed,
+        ]),
+      ),
+    );
+    const thinking = out
+      .filter((f) => f.delta?.type === "thinking_delta")
+      .map((f) => f.delta?.thinking)
+      .join("");
+    expect(thinking).toBe("First part. More.\n\n**Second**");
+  });
+
+  it("streams refusal deltas as text and stops with refusal", async () => {
+    const out = await frames(
+      responsesSSEToAnthropicSSE(
+        sse([
+          created,
+          { type: "response.output_item.added", item: { id: "msg", type: "message" } },
+          { type: "response.refusal.delta", item_id: "msg", delta: "I can't " },
+          { type: "response.refusal.delta", item_id: "msg", delta: "help." },
+          { type: "response.output_item.done", item: { id: "msg", type: "message" } },
+          completed,
+        ]),
+      ),
+    );
+    const text = out.filter((f) => f.delta?.type === "text_delta").map((f) => f.delta?.text).join("");
+    expect(text).toBe("I can't help.");
+    expect(out.filter((f) => f.type === "content_block_start")).toHaveLength(1);
+    expect(out.find((f) => f.type === "message_delta")?.delta?.stop_reason).toBe("refusal");
+  });
+
+  it("restores shortened tool names on tool_use block starts", async () => {
+    const long = "z".repeat(90);
+    const out = await frames(
+      responsesSSEToAnthropicSSE(
+        sse([
+          created,
+          { type: "response.output_item.added", item: { id: "fc", type: "function_call", call_id: "c1", name: shortenToolName(long) } },
+          completed,
+        ]),
+        undefined,
+        undefined,
+        { toolNames: toolNameRestoreMap({ tools: [{ name: long }] }) },
+      ),
+    );
+    expect(out.find((f) => f.type === "content_block_start")?.content_block).toMatchObject({ type: "tool_use", name: long });
   });
 });

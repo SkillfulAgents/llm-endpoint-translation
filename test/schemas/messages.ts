@@ -10,7 +10,7 @@ export const messagesUsage = z.strictObject({
   speed: z.enum(["slow", "fast"]).optional(),
 });
 
-export const stopReason = z.enum(["end_turn", "max_tokens", "tool_use"]);
+export const stopReason = z.enum(["end_turn", "max_tokens", "tool_use", "refusal"]);
 
 const textBlock = z.strictObject({ type: z.literal("text"), text: z.string() });
 const toolUseBlock = z.strictObject({

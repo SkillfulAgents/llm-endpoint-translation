@@ -1,5 +1,6 @@
 // Non-streaming OpenAI Responses reply → Anthropic Messages reply.
 
+import { restoreToolName } from "../shared/tool-names.js";
 import { encodeReasoningSignature } from "./reasoning-replay.js";
 import {
   extractResponsesUsage,
@@ -12,6 +13,8 @@ export type ResponsesResponseOptions = {
   model?: string;
   /** Sign thinking blocks with the encrypted reasoning for replay under this scope. */
   reasoningReplayScope?: string;
+  /** Shortened → original tool names, from `toolNameRestoreMap(request)`. */
+  toolNames?: Record<string, string>;
 };
 
 export function responsesResponseToMessages(
@@ -25,6 +28,7 @@ export function responsesResponseToMessages(
 
   const blocks: Array<Record<string, unknown>> = [];
   let sawToolCall = false;
+  let sawRefusal = false;
 
   for (const item of output as Array<Record<string, unknown>>) {
     if (!item || typeof item !== "object") continue;
@@ -34,6 +38,9 @@ export function responsesResponseToMessages(
       for (const part of content as Array<Record<string, unknown>>) {
         if (part?.type === "output_text" && typeof part.text === "string") {
           blocks.push({ type: "text", text: part.text });
+        } else if (part?.type === "refusal" && typeof part.refusal === "string") {
+          sawRefusal = true;
+          blocks.push({ type: "text", text: part.refusal });
         }
       }
     } else if (type === "function_call") {
@@ -41,7 +48,7 @@ export function responsesResponseToMessages(
       blocks.push({
         type: "tool_use",
         id: typeof item.call_id === "string" ? item.call_id : "",
-        name: typeof item.name === "string" ? item.name : "",
+        name: typeof item.name === "string" ? restoreToolName(item.name, options?.toolNames) : "",
         input: parseJsonOrEmpty(item.arguments),
       });
     } else if (type === "reasoning") {
@@ -61,9 +68,11 @@ export function responsesResponseToMessages(
   const stopReason =
     body.status === "incomplete"
       ? "max_tokens"
-      : sawToolCall
-        ? "tool_use"
-        : "end_turn";
+      : sawRefusal
+        ? "refusal"
+        : sawToolCall
+          ? "tool_use"
+          : "end_turn";
 
   return {
     id,

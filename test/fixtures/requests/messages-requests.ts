@@ -3,6 +3,8 @@
 type Json = Record<string, unknown>;
 
 const PNG = "iVBORw0KGgo=";
+const PDF_DOC = "JVBERi0xLjQK";
+const LONG_TOOL = `mcp__${"server".repeat(8)}__${"tool".repeat(6)}`;
 
 export const messagesRequests: Record<string, Json> = {
   "plain text": {
@@ -108,6 +110,55 @@ export const messagesRequests: Record<string, Json> = {
       },
     },
     messages: [{ role: "user", content: "Find it" }],
+  },
+  "documents in user turn and tool result": {
+    model: "gpt-5.5",
+    max_tokens: 1024,
+    tools: [{ name: "Read", input_schema: { type: "object", properties: {} } }],
+    messages: [
+      {
+        role: "user",
+        content: [
+          { type: "text", text: "Summarize both" },
+          { type: "document", title: "spec.pdf", source: { type: "base64", media_type: "application/pdf", data: PDF_DOC } },
+          { type: "document", source: { type: "url", url: "https://example.com/a.pdf" } },
+          { type: "document", source: { type: "text", media_type: "text/plain", data: "plain" } },
+        ],
+      },
+      { role: "assistant", content: [{ type: "tool_use", id: "toolu_r", name: "Read", input: {} }] },
+      {
+        role: "user",
+        content: [
+          {
+            type: "tool_result",
+            tool_use_id: "toolu_r",
+            content: [
+              { type: "text", text: "2 pages" },
+              { type: "document", source: { type: "base64", media_type: "application/pdf", data: PDF_DOC } },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  "tool_choice none and a tool name over 64 chars": {
+    model: "gpt-5.5",
+    max_tokens: 64,
+    tools: [{ name: LONG_TOOL, input_schema: { type: "object", properties: {} } }],
+    tool_choice: { type: "none" },
+    messages: [
+      { role: "user", content: "go" },
+      { role: "assistant", content: [{ type: "tool_use", id: "toolu_l", name: LONG_TOOL, input: {} }] },
+      { role: "user", content: [{ type: "tool_result", tool_use_id: "toolu_l", content: "ok" }] },
+    ],
+  },
+  "forced tool over 64 chars and thinking budget": {
+    model: "gpt-5.5",
+    max_tokens: 64,
+    thinking: { type: "enabled", budget_tokens: 8000 },
+    tools: [{ name: LONG_TOOL, input_schema: { type: "object", properties: {} } }],
+    tool_choice: { type: "tool", name: LONG_TOOL },
+    messages: [{ role: "user", content: "go" }],
   },
   "disabled thinking": {
     model: "gpt-5.5",
