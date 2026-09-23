@@ -1448,6 +1448,130 @@ describe("responsesResponseToAnthropic — edge cases", () => {
       { type: "tool_use", id: "c1", name: "x", input: {} },
     ]);
   });
+
+  it("reads a plain-string reasoning field and skips an empty reasoning item", () => {
+    const out = responsesResponseToAnthropic({
+      id: "r",
+      output: [
+        { type: "reasoning", reasoning: "grok style" },
+        { type: "reasoning", summary: [] },
+        { type: "web_search_call", id: "ws" },
+      ],
+    });
+    expect(out.content).toEqual([{ type: "thinking", thinking: "grok style" }]);
+  });
+
+  it("lets incomplete win over a refusal and a tool call in the same reply", () => {
+    const out = responsesResponseToAnthropic({
+      id: "r",
+      status: "incomplete",
+      output: [
+        { type: "message", content: [{ type: "refusal", refusal: "no" }] },
+        { type: "function_call", call_id: "c1", name: "x", arguments: "{}" },
+      ],
+    });
+    expect(out.stop_reason).toBe("max_tokens");
+  });
+
+  it("keeps the thinking block unsigned when the reasoning item has no encrypted_content", () => {
+    const out = responsesResponseToAnthropic(
+      { id: "r", output: [{ type: "reasoning", id: "rs_1", summary: [{ type: "summary_text", text: "s" }] }] },
+      undefined,
+      { reasoningReplayScope: "scope" },
+    );
+    expect(out.content).toEqual([{ type: "thinking", thinking: "s" }]);
+  });
+});
+
+describe("anthropicRequestToResponses — more edge cases", () => {
+  const tools = [{ name: "f", input_schema: { type: "object" } }];
+
+  it("sends {} arguments for a tool_use with no input and keeps text / call order", () => {
+    const out = anthropicRequestToResponses({
+      model: "m",
+      messages: [
+        {
+          role: "assistant",
+          content: [
+            { type: "text", text: "a" },
+            { type: "tool_use", id: "t1", name: "f" },
+            { type: "text", text: "b" },
+          ],
+        },
+      ],
+    });
+    expect(out.input).toEqual([
+      { role: "assistant", content: [{ type: "output_text", text: "a" }] },
+      { type: "function_call", call_id: "t1", name: "f", arguments: "{}" },
+      { role: "assistant", content: [{ type: "output_text", text: "b" }] },
+    ]);
+  });
+
+  it("drops thinking blocks from history when no replay scope is set", () => {
+    const out = anthropicRequestToResponses({
+      model: "m",
+      messages: [
+        { role: "assistant", content: [{ type: "thinking", thinking: "hmm", signature: "x" }, { type: "text", text: "hi" }] },
+      ],
+    });
+    expect(out.input).toEqual([{ role: "assistant", content: [{ type: "output_text", text: "hi" }] }]);
+  });
+
+  it("sends a document-only tool_result as an array with no empty input_text", () => {
+    const out = anthropicRequestToResponses({
+      model: "m",
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "tool_result",
+              tool_use_id: "t1",
+              content: [{ type: "document", source: { type: "url", url: "https://x.test/a.pdf" } }],
+            },
+          ],
+        },
+      ],
+    });
+    expect(out.input).toEqual([
+      { type: "function_call_output", call_id: "t1", output: [{ type: "input_file", file_url: "https://x.test/a.pdf" }] },
+    ]);
+  });
+
+  it("omits tool_choice any when the only tool is the built-in web_search", () => {
+    const out = anthropicRequestToResponses({
+      model: "m",
+      messages: [],
+      tools: [{ type: "web_search_20250305", name: "web_search" }],
+      tool_choice: { type: "any" },
+    });
+    expect(out.tools).toEqual([{ type: "web_search" }]);
+    expect(out.tool_choice).toBeUndefined();
+  });
+
+  it("omits tool_choice none when no tools survive translation", () => {
+    const out = anthropicRequestToResponses({
+      model: "m",
+      messages: [],
+      tools: [{ type: "code_execution_20250825", name: "code_execution" }],
+      tool_choice: { type: "none" },
+    });
+    expect(out.tools).toBeUndefined();
+    expect(out.tool_choice).toBeUndefined();
+  });
+
+  it("forces a function tool by name", () => {
+    const out = anthropicRequestToResponses({ model: "m", messages: [], tools, tool_choice: { type: "tool", name: "f" } });
+    expect(out.tool_choice).toEqual({ type: "function", name: "f" });
+  });
+
+  it("skips null messages, unknown roles, and non-array content", () => {
+    const out = anthropicRequestToResponses({
+      model: "m",
+      messages: [null, { role: "tool", content: "x" }, { role: "assistant", content: 3 }],
+    });
+    expect(out.input).toEqual([]);
+  });
 });
 
 describe("anthropicRequestToResponses — tool_choice none, documents, long tool names, thinking budget", () => {
