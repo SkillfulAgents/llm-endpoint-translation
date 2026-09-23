@@ -4,6 +4,7 @@ export {
   clampEffort,
   createEffortMapper,
   defaultEffortMapper,
+  effortFromThinkingBudget,
   isThinkingDisabled,
   readAnthropicEffort,
   type EffortCeiling,
@@ -11,6 +12,7 @@ export {
   type EffortMapperOptions,
   type ReasoningEffort,
 } from "./shared/effort.js";
+export { shortenToolName, toolNameRestoreMap } from "./shared/tool-names.js";
 
 // Messages -> Responses: an Anthropic client talking to a Responses upstream.
 export {

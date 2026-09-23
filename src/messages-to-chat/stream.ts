@@ -2,6 +2,7 @@
 
 import { responsesErrorToMessagesError } from "../messages-to-responses/error.js";
 import { readWithIdleTimeout, STREAM_IDLE_TIMEOUT_MS } from "../shared/idle-read.js";
+import { restoreToolName } from "../shared/tool-names.js";
 import { extractChatCompletionsUsage, mapFinishReason } from "./response.js";
 
 export const CHAT_COMPLETIONS_STREAM_IDLE_TIMEOUT_MS = STREAM_IDLE_TIMEOUT_MS;
@@ -12,6 +13,8 @@ export type ChatCompletionsStreamOptions = {
   idleTimeoutMs?: number;
   /** Fired when the stream ends abnormally (stalled or truncated). */
   onAbnormalEnd?: (reason: "stalled" | "truncated") => void;
+  /** Shortened → original tool names, from `toolNameRestoreMap(request)`. */
+  toolNames?: Record<string, string>;
 };
 
 export function chatCompletionsStreamToMessagesStream(
@@ -22,7 +25,7 @@ export function chatCompletionsStreamToMessagesStream(
   const idleTimeoutMs = options?.idleTimeoutMs ?? CHAT_COMPLETIONS_STREAM_IDLE_TIMEOUT_MS;
   const encoder = new TextEncoder();
   const decoder = new TextDecoder();
-  const state = new ChatTranslatorState(canonicalModel);
+  const state = new ChatTranslatorState(canonicalModel, options?.toolNames);
   const reader = input.getReader();
   let lineBuffer = "";
 
@@ -98,6 +101,7 @@ class ChatTranslatorState {
   private usage: Record<string, number> | null = null;
   private finishReason: unknown;
   private sawToolCall = false;
+  private sawRefusal = false;
   private nextIndex = 0;
   // Currently-open text/thinking block (at most one of each kind at a time).
   private openText: OpenBlock | null = null;
@@ -106,7 +110,10 @@ class ChatTranslatorState {
   private toolBlocks = new Map<number, OpenBlock>();
   private stopped = new Set<number>();
 
-  constructor(private readonly canonicalModel?: string) {}
+  constructor(
+    private readonly canonicalModel?: string,
+    private readonly toolNames?: Record<string, string>,
+  ) {}
 
   get finished(): boolean {
     return this.finishedMessage;
@@ -149,6 +156,10 @@ class ChatTranslatorState {
     }
     if (typeof delta.content === "string" && delta.content) {
       this.emitTextDelta(delta.content);
+    }
+    if (typeof delta.refusal === "string" && delta.refusal) {
+      this.sawRefusal = true;
+      this.emitTextDelta(delta.refusal);
     }
     if (Array.isArray(delta.tool_calls)) {
       for (const [position, call] of (delta.tool_calls as Array<Record<string, unknown>>).entries()) {
@@ -235,7 +246,7 @@ class ChatTranslatorState {
       block = this.openBlock("tool_use", {
         type: "tool_use",
         id: typeof call.id === "string" ? call.id : `call_${callIndex}`,
-        name: typeof fn.name === "string" ? fn.name : "",
+        name: typeof fn.name === "string" ? restoreToolName(fn.name, this.toolNames) : "",
         input: {},
       });
       this.toolBlocks.set(callIndex, block);
@@ -284,7 +295,7 @@ class ChatTranslatorState {
       sseEvent("message_delta", {
         type: "message_delta",
         delta: {
-          stop_reason: mapFinishReason(this.finishReason, this.sawToolCall),
+          stop_reason: mapFinishReason(this.finishReason, this.sawToolCall, this.sawRefusal),
           stop_sequence: null,
         },
         usage: this.usage ?? {

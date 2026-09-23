@@ -94,3 +94,80 @@ export function anthropicImageToUrl(source: unknown): string | null {
   }
   return null;
 }
+
+/** An Anthropic `document` block, reduced to what an OpenAI upstream can carry. */
+export type AnthropicDocument =
+  | { kind: "file"; filename: string; dataUrl: string }
+  | { kind: "url"; url: string }
+  | { kind: "text"; text: string };
+
+const DEFAULT_DOCUMENT_FILENAME = "document.pdf";
+
+/** `null` for sources with no portable form (e.g. Anthropic Files API `file_id`). */
+export function anthropicDocument(block: Record<string, unknown>): AnthropicDocument | null {
+  const source = block.source as Record<string, unknown> | undefined;
+  if (!source || typeof source !== "object") return null;
+  if (source.type === "base64" && typeof source.data === "string" && source.data) {
+    const mediaType = typeof source.media_type === "string" ? source.media_type : "application/pdf";
+    const filename = typeof block.title === "string" && block.title ? block.title : DEFAULT_DOCUMENT_FILENAME;
+    return { kind: "file", filename, dataUrl: `data:${mediaType};base64,${source.data}` };
+  }
+  if (source.type === "url" && typeof source.url === "string" && source.url) {
+    return { kind: "url", url: source.url };
+  }
+  if (source.type === "text" && typeof source.data === "string") {
+    return { kind: "text", text: source.data };
+  }
+  if (source.type === "content") {
+    const text = messageContentToText(source.content);
+    return text ? { kind: "text", text } : null;
+  }
+  return null;
+}
+
+/** Return value from `mapImageSource` — omit the image and surface `reason` as text. */
+export type ImageOmit = { reason: string; mediaType?: string };
+
+export type ToolResultParts = {
+  text: string;
+  imageUrls: string[];
+  omittedNotes: string[];
+  documents: Array<Exclude<AnthropicDocument, { kind: "text" }>>;
+};
+
+/**
+ * Split a tool_result `content` so images and documents travel as real parts, never
+ * as JSON-stringified base64 in the text output (the model would "read" nothing).
+ */
+export function splitToolResultContent(
+  content: unknown,
+  mapImageSource?: (source: unknown) => ImageOmit | null,
+): ToolResultParts {
+  const parts: ToolResultParts = { text: "", imageUrls: [], omittedNotes: [], documents: [] };
+  if (typeof content === "string") return { ...parts, text: content };
+  if (!Array.isArray(content)) {
+    return { ...parts, text: content == null ? "" : JSON.stringify(content) };
+  }
+  const textParts: string[] = [];
+  for (const block of content as Array<Record<string, unknown>>) {
+    if (!block || typeof block !== "object") continue;
+    if (block.type === "text" && typeof block.text === "string") {
+      textParts.push(block.text);
+    } else if (block.type === "image") {
+      const omitted = mapImageSource?.(block.source) ?? null;
+      if (omitted) {
+        parts.omittedNotes.push(omitted.reason);
+        continue;
+      }
+      const url = anthropicImageToUrl(block.source);
+      if (url) parts.imageUrls.push(url);
+    } else if (block.type === "document") {
+      const doc = anthropicDocument(block);
+      if (doc?.kind === "text") textParts.push(doc.text);
+      else if (doc) parts.documents.push(doc);
+    } else {
+      textParts.push(JSON.stringify(block));
+    }
+  }
+  return { ...parts, text: textParts.join("\n\n") };
+}

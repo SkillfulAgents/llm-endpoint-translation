@@ -17,18 +17,21 @@ Evidence column:
 | Mid-turn user steers (Claude Code `<system-reminder>` in tool results) | Re-surfaced as user input items | Re-surfaced as user messages | U |
 | Tool calls and results | `function_call` / `function_call_output`; functions sent with `strict: false` | `tool_calls` / `tool` messages | U, L, S |
 | Parallel tool calls | Supported | Supported, including vendors that omit the per-call `index` (told apart by position) | U, S |
-| `tool_choice` | `auto` → `auto`, `any` → `required`, `tool` → forced function. Forcing a non-function or unknown tool is omitted. | Same | U |
+| `tool_choice` | `auto` → `auto`, `any` → `required`, `none` → `none`, `tool` → forced function. Forcing a non-function or unknown tool is omitted. | Same | U |
+| Tool names over 64 characters | Shortened to a stable 64-character hashed name in `tools`, history, and `tool_choice`. Pass `toolNameRestoreMap(request)` as the reply/stream `toolNames` option to get the original names back. | Same | U |
 | Images in user turns | Base64 → data URL, URL passed through. Optional `mapImageSource` filter can drop images with a note. | Base64 → data URL, URL passed through. No filter hook. | U, S |
-| Images in tool results | Moved to a follow-up user message (tool output is text-only) | Same | U |
+| Images in tool results | Moved to a follow-up user message | Same | U |
+| Documents (`document` blocks) | Base64 → `input_file` with `file_data`, URL → `input_file` with `file_url`, text → `input_text`. In tool results they become `input_file` parts of `function_call_output.output`. | Base64 → `file` part, URL → a text note (Chat `file` parts cannot take a URL), text → text. In tool results they move to a follow-up user message. | U |
 | Structured output (`output_config.format` JSON schema) | `text.format` | `response_format` | U |
-| Reasoning effort | `reasoning.effort` through a per-model mapper (`mapReasoningEffort`); `summary: "auto"` | `reasoning_effort` passed through; `mapReasoningEffort` can rename or omit it | U, L |
-| Reasoning output | Summaries stream as `thinking` blocks | `reasoning_content` streams as `thinking` blocks | U; S (Responses) |
+| Reasoning effort | `reasoning.effort` through a per-model mapper (`mapReasoningEffort`); `summary: "auto"`. Without `output_config.effort`, `thinking.budget_tokens` maps to `high` (≥ 4096), `medium` (≥ 2048), or `low`. | `reasoning_effort` passed through, with the same `budget_tokens` fallback; `mapReasoningEffort` can rename or omit it | U, L |
+| Reasoning output | Summaries stream as `thinking` blocks; summary parts are separated by a blank line, as in the JSON reply | `reasoning_content` streams as `thinking` blocks | U; S (Responses) |
 | Reasoning replay across turns | With `reasoningReplayScope`, encrypted reasoning rides in the thinking `signature` and is replayed only under the same scope. Blobs from another scope, and orphans with no following item, are dropped. | Never replayed; prior thinking is dropped from history | U, L; S (Responses) |
 | Sampling (`temperature`, `top_p`) | Dropped (reasoning models reject them) | Passed through | U |
 | `stop_sequences` | Dropped | Sent as `stop` | U |
 | Output token limit | `max_tokens` → `max_output_tokens` | `max_tokens`, or `max_completion_tokens` via `tokenLimitField` | U, L |
 | Usage | Input, output, and cached input tokens (as `cache_read_input_tokens`) | Same; streaming requests ask for usage with `stream_options.include_usage` | U |
-| Stop reasons | `tool_use`, `end_turn`; `incomplete` → `max_tokens` | `tool_calls` → `tool_use`, `length` → `max_tokens`, anything else → `end_turn` | U |
+| Stop reasons | `tool_use`, `end_turn`; `incomplete` → `max_tokens`; a refusal → `refusal` | `tool_calls` → `tool_use`, `length` → `max_tokens`, `content_filter` or a refusal → `refusal`, anything else → `end_turn` | U |
+| Upstream refusals | `refusal` content parts and `response.refusal.delta` become text with `stop_reason: "refusal"` | `message.refusal` / `delta.refusal` become text with `stop_reason: "refusal"` | U |
 | Upstream HTTP errors | OpenAI error envelope → Anthropic error envelope with a matching type | Same | U, L, S |
 | In-stream error event | `error` / `response.failed` → Messages `error` event. Claude Code shows the upstream message and does not retry. | Error chunk → Messages `error` event. Claude Code treats it as a server error, retries, then shows a generic message. | U, L |
 | Truncated stream (EOF without a terminal event) | Retryable `overloaded_error`, never a fabricated `end_turn`; `onAbnormalEnd("truncated")` | Same. A missing trailing usage chunk after a `finish_reason` still ends normally, with zero usage. | U, L |
@@ -58,19 +61,19 @@ These Anthropic features have no translation. The codec does not claim an equiva
 | Other Anthropic-defined tool types without `input_schema` | Sent as functions with an empty schema | Same |
 | Prompt caching (`cache_control`) | Markers dropped. OpenAI caches automatically, reported as `cache_read_input_tokens`; `cache_creation_input_tokens` is always 0. | Same |
 | Deferred tools (`defer_loading`, tool search) | Ignored: every tool is sent up front | Same |
-| Documents and PDFs (`document` blocks), search results, citations | Dropped from user turns. Inside tool results they are serialized as JSON text. | Same |
+| Search results, citations, Files API documents (`source.type: "file"`) | Dropped from user turns. Search results inside tool results are serialized as JSON text. | Same |
 | `redacted_thinking` and Claude-signed thinking in history | Dropped | Dropped |
 | Effort levels | Mapped per model by the caller's mapper (for example xAI has no `none`); no guarantee of equal reasoning depth | Passed through; the vendor decides |
 | Fast mode / speed | Only as OpenAI `service_tier` (`flex` / `priority`) | Not available |
 | Extended context (1M beta), `context_management`, `anthropic-beta` headers | Not translated; the upstream model's own context window applies | Same |
 | `stop_sequence` in replies | Always `null` | Always `null` |
 | `metadata.user_id` | Dropped | Dropped |
-| Upstream refusals | Responses `refusal` content parts are not mapped to text | Not handled specially |
-| Content-filter stops | `incomplete` for any reason, including content filtering, reports `max_tokens` | `content_filter` reports `end_turn` |
+| Content-filter stops | `incomplete` for any reason, including content filtering, reports `max_tokens` | Mapped to `refusal` |
 
 ## Not verified
 
 - Replaying encrypted reasoning across different accounts of the same vendor.
 - That an upstream stops generating after a cancel. The bench proxy does abort its upstream request.
 - Structured output, stop sequences, and effort mapping against live upstreams (unit-tested only).
+- Documents, refusals, `tool_choice: none`, and shortened tool names against live upstreams (unit-tested and spec-validated only). Whether each Chat Completions vendor accepts `file` parts is untested.
 - The codecs embedded in the agent server process. The bench runs them in a separate Node process in the same image.

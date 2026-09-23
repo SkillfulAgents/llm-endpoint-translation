@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { clampEffort, createEffortMapper, defaultEffortMapper } from "./effort.js";
+import { clampEffort, createEffortMapper, defaultEffortMapper, effortFromThinkingBudget } from "./effort.js";
 
 describe("defaultEffortMapper", () => {
   it("maps low/medium/high/xhigh straight through", () => {
@@ -19,10 +19,27 @@ describe("defaultEffortMapper", () => {
     ).toBe("none");
   });
 
-  it("returns undefined when there is no effort, an unknown effort, or enabled thinking only", () => {
+  it("returns undefined when there is no effort, an unknown effort, or enabled thinking without a budget", () => {
     expect(defaultEffortMapper({})).toBeUndefined();
     expect(defaultEffortMapper({ output_config: { effort: "bogus" } })).toBeUndefined();
-    expect(defaultEffortMapper({ thinking: { type: "enabled", budget_tokens: 2048 } })).toBeUndefined();
+    expect(defaultEffortMapper({ thinking: { type: "enabled" } })).toBeUndefined();
+  });
+
+  it("buckets thinking.budget_tokens into an effort when no explicit effort is set", () => {
+    expect(defaultEffortMapper({ thinking: { type: "enabled", budget_tokens: 1024 } })).toBe("low");
+    expect(defaultEffortMapper({ thinking: { type: "enabled", budget_tokens: 2048 } })).toBe("medium");
+    expect(defaultEffortMapper({ thinking: { type: "enabled", budget_tokens: 31999 } })).toBe("high");
+  });
+
+  it("lets an explicit output_config.effort win over thinking.budget_tokens", () => {
+    expect(
+      defaultEffortMapper({ thinking: { type: "enabled", budget_tokens: 31999 }, output_config: { effort: "low" } }),
+    ).toBe("low");
+  });
+
+  it("clamps a budget-derived effort to the mapper ceiling", () => {
+    const lowCeiling = createEffortMapper({ disabledEffort: "none", maxEffort: "high" });
+    expect(lowCeiling({ thinking: { type: "enabled", budget_tokens: 50000 } })).toBe("high");
   });
 
   it("never emits minimal", () => {
@@ -55,6 +72,20 @@ describe("createEffortMapper", () => {
       expect(lowFloorHighCeiling({ output_config: { effort } })).toBeUndefined();
     },
   );
+});
+
+describe("effortFromThinkingBudget", () => {
+  it("ignores adaptive or disabled thinking and non-numeric budgets", () => {
+    expect(effortFromThinkingBudget({ thinking: { type: "adaptive" } })).toBeUndefined();
+    expect(effortFromThinkingBudget({ thinking: { type: "disabled", budget_tokens: 9000 } })).toBeUndefined();
+    expect(effortFromThinkingBudget({ thinking: { type: "enabled", budget_tokens: "9000" } })).toBeUndefined();
+  });
+
+  it("uses the 2048 / 4096 bucket edges", () => {
+    expect(effortFromThinkingBudget({ thinking: { type: "enabled", budget_tokens: 2047 } })).toBe("low");
+    expect(effortFromThinkingBudget({ thinking: { type: "enabled", budget_tokens: 4095 } })).toBe("medium");
+    expect(effortFromThinkingBudget({ thinking: { type: "enabled", budget_tokens: 4096 } })).toBe("high");
+  });
 });
 
 describe("clampEffort", () => {

@@ -1,8 +1,12 @@
 // Non-streaming OpenAI Chat Completions reply → Anthropic Messages reply.
 
+import { restoreToolName } from "../shared/tool-names.js";
+
 export type ChatCompletionsResponseOptions = {
   /** Model reported on the Messages reply; defaults to the upstream `model`. */
   model?: string;
+  /** Shortened → original tool names, from `toolNameRestoreMap(request)`. */
+  toolNames?: Record<string, string>;
 };
 
 export function chatCompletionsResponseToMessages(
@@ -24,6 +28,8 @@ export function chatCompletionsResponseToMessages(
   if (typeof message.content === "string" && message.content.length > 0) {
     blocks.push({ type: "text", text: message.content });
   }
+  const sawRefusal = typeof message.refusal === "string" && message.refusal.length > 0;
+  if (sawRefusal) blocks.push({ type: "text", text: message.refusal });
   let sawToolCall = false;
   if (Array.isArray(message.tool_calls)) {
     for (const call of message.tool_calls as Array<Record<string, unknown>>) {
@@ -32,7 +38,7 @@ export function chatCompletionsResponseToMessages(
       blocks.push({
         type: "tool_use",
         id: typeof call.id === "string" ? call.id : "",
-        name: typeof fn.name === "string" ? fn.name : "",
+        name: typeof fn.name === "string" ? restoreToolName(fn.name, options?.toolNames) : "",
         input: parseJsonOrEmpty(fn.arguments),
       });
     }
@@ -44,7 +50,7 @@ export function chatCompletionsResponseToMessages(
     role: "assistant",
     model: canonicalModel || (typeof body.model === "string" ? body.model : ""),
     content: blocks,
-    stop_reason: mapFinishReason(choice?.finish_reason, sawToolCall),
+    stop_reason: mapFinishReason(choice?.finish_reason, sawToolCall, sawRefusal),
     stop_sequence: null,
     usage: extractChatCompletionsUsage(body.usage),
   };
@@ -53,9 +59,11 @@ export function chatCompletionsResponseToMessages(
 export function mapFinishReason(
   finish: unknown,
   sawToolCall: boolean,
-): "tool_use" | "max_tokens" | "end_turn" {
+  sawRefusal = false,
+): "tool_use" | "max_tokens" | "end_turn" | "refusal" {
   if (finish === "tool_calls" || sawToolCall) return "tool_use";
   if (finish === "length") return "max_tokens";
+  if (finish === "content_filter" || sawRefusal) return "refusal";
   return "end_turn";
 }
 
