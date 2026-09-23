@@ -13,6 +13,8 @@ export type ChatCompletionsStreamOptions = {
   idleTimeoutMs?: number;
   /** Fired when the stream ends abnormally (stalled or truncated). */
   onAbnormalEnd?: (reason: "stalled" | "truncated") => void;
+  /** Fired when the turn completes without upstream usage, so it is reported as zero tokens. */
+  onUsageMissing?: () => void;
   /** Shortened → original tool names, from `toolNameRestoreMap(request)`. */
   toolNames?: Record<string, string>;
 };
@@ -25,7 +27,7 @@ export function chatCompletionsStreamToMessagesStream(
   const idleTimeoutMs = options?.idleTimeoutMs ?? CHAT_COMPLETIONS_STREAM_IDLE_TIMEOUT_MS;
   const encoder = new TextEncoder();
   const decoder = new TextDecoder();
-  const state = new ChatTranslatorState(canonicalModel, options?.toolNames);
+  const state = new ChatTranslatorState(canonicalModel, options?.toolNames, options?.onUsageMissing);
   const reader = input.getReader();
   let lineBuffer = "";
 
@@ -117,6 +119,7 @@ class ChatTranslatorState {
   constructor(
     private readonly canonicalModel?: string,
     private readonly toolNames?: Record<string, string>,
+    private readonly onUsageMissing?: () => void,
   ) {}
 
   get finished(): boolean {
@@ -311,6 +314,7 @@ class ChatTranslatorState {
   finish(): void {
     if (this.finishedMessage) return;
     if (!this.startedMessage) this.emitMessageStart();
+    if (!this.usage) this.onUsageMissing?.();
     this.closeAllBlocks();
     this.pending.push(
       sseEvent("message_delta", {

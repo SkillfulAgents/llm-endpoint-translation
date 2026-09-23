@@ -92,7 +92,7 @@ An Anthropic client talking to any OpenAI-compatible Chat Completions model (Ope
 - **Stop reasons.** `tool_calls` → `tool_use`, `length` → `max_tokens`, `content_filter` or a refusal → `refusal`, anything else → `end_turn`.
 - **HTTP errors** convert as in Messages → Responses (the error body has the same shape).
 - **Errors inside the stream** become a Messages `error` event. Claude Code treats it as a server error, retries, then shows a generic message.
-- **Broken streams** end with a retryable `overloaded_error`, as in Messages → Responses. Two exceptions end normally: a stream that sent a `finish_reason` but no final usage chunk (reported with zero usage), and a stall after the `finish_reason`.
+- **Broken streams** end with a retryable `overloaded_error`, as in Messages → Responses. Two exceptions end normally: a stream that sent a `finish_reason` but no final usage chunk (reported with zero usage; `onUsageMissing` fires so callers that bill from usage can tell), and a stall after the `finish_reason`.
 
 ### Dropped or degraded
 

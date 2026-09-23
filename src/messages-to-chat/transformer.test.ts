@@ -989,6 +989,20 @@ describe("chatCompletionsStreamToMessagesStream — edge cases", () => {
     expect(messageDelta.delta.stop_reason).toBe("max_tokens");
   });
 
+  it("fires onUsageMissing only when the turn finishes without upstream usage", async () => {
+    const run = async (chunks: string[]) => {
+      let missing = 0;
+      await frames(
+        chatCompletionsStreamToMessagesStream(text([...chunks, "data: [DONE]", ""].join("\n\n")), {
+          onUsageMissing: () => missing++,
+        }),
+      );
+      return missing;
+    };
+    expect(await run([line({ id: "c", model: "m", choices: [{ index: 0, delta: { content: "a" }, finish_reason: "stop" }] })])).toBe(1);
+    expect(await run([line({ id: "c", model: "m", choices: [{ index: 0, delta: { content: "a" }, finish_reason: "stop" }], usage })])).toBe(0);
+  });
+
   it("assembles tool arguments split across chunks into one input_json stream", async () => {
     const body = [
       line({ id: "c", model: "m", choices: [{ index: 0, delta: { tool_calls: [{ index: 0, id: "t1", function: { name: "f", arguments: '{"q":' } }] } }] }),
