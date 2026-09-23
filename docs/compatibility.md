@@ -31,19 +31,18 @@ Evidence column:
 | Stop reasons | `tool_use`, `end_turn`; `incomplete` → `max_tokens` | `tool_calls` → `tool_use`, `length` → `max_tokens`, anything else → `end_turn` | U |
 | Upstream HTTP errors | OpenAI error envelope → Anthropic error envelope with a matching type | Same | U, L, S |
 | In-stream error event | `error` / `response.failed` → Messages `error` event. Claude Code shows the upstream message and does not retry. | Error chunk → Messages `error` event. Claude Code treats it as a server error, retries, then shows a generic message. | U, L |
-| Truncated stream (EOF without a terminal event) | Retryable `overloaded_error`, never a fabricated `end_turn` | Same. A missing trailing usage chunk after a `finish_reason` still ends normally, with zero usage. | U, L |
+| Truncated stream (EOF without a terminal event) | Retryable `overloaded_error`, never a fabricated `end_turn`; `onAbnormalEnd("truncated")` | Same. A missing trailing usage chunk after a `finish_reason` still ends normally, with zero usage. | U, L |
 | Upstream connection drop | Output stream errors. The host must abort the client connection. | Same | U, L |
-| Stalled stream | Idle timeout (default 5 min) → retryable `overloaded_error` | **No idle timeout.** The host must enforce one. | U |
+| Stalled stream | Idle timeout (`idleTimeoutMs`, default 5 min) → retryable `overloaded_error`; `onAbnormalEnd("stalled")` | Same. A stall after a `finish_reason` ends normally. | U |
 | Cancellation | Cancelling the output stream cancels the upstream reader. The host must also abort its upstream request. | Same | U, L |
 | Model or connection switch mid-conversation | Text and tool history carry over. Reasoning from another scope is skipped. | Text and tool history carry over. Thinking is dropped. | L |
 | Service tier | `serviceTier` option out, `onServiceTier` callback and `usage.speed` echo back | Not supported | U |
 
 ## Integration contract for hosts
 
-The codecs are pure: no network, no timers except the Responses idle timeout, no credentials. Whoever runs them (the Platform proxy, an embedded proxy) owns:
+The codecs are pure: no network, no timers except the stream idle timeout, no credentials. Whoever runs them (the Platform proxy, an embedded proxy) owns:
 
 - **Aborting both sides.** On client disconnect, abort the upstream request. On an output-stream error, destroy the client connection; otherwise the client waits forever. Found by `bench/faults.sh` against the bench proxy.
-- **A stall timeout for Chat Completions streams.**
 - **Per-provider request options**: effort mapping, token-limit field, per-model output caps (Claude Code asks for up to 128k output tokens; `gpt-4.1-mini` rejects anything above 32,768), and Codex-style removal of token-limit fields.
 - **Choosing the replay scope.** Use one scope per connection (account) and model. In `bench/switch.sh`, OpenAI accepted a `gpt-5.4-mini` blob replayed to `gpt-5.4` within the same account. Replay across accounts has not been tested; the scope prevents it.
 
@@ -55,7 +54,7 @@ These Anthropic features have no translation. The codec does not claim an equiva
 | --- | --- | --- |
 | Native web search (`web_search` server tool) | Mapped to OpenAI's hosted `web_search`. Results are folded into the model's text; no `web_search_tool_result` blocks or citations. | Dropped |
 | Native web fetch (`web_fetch`) | Dropped. `hasWebFetchTool(body)` lets callers reject it up front. | Dropped |
-| Code execution server tool | **Not recognized**: sent as a client function named `code_execution` with an empty schema | Dropped |
+| Code execution server tool | Dropped | Dropped |
 | Other Anthropic-defined tool types without `input_schema` | Sent as functions with an empty schema | Same |
 | Prompt caching (`cache_control`) | Markers dropped. OpenAI caches automatically, reported as `cache_read_input_tokens`; `cache_creation_input_tokens` is always 0. | Same |
 | Deferred tools (`defer_loading`, tool search) | Ignored: every tool is sent up front | Same |
