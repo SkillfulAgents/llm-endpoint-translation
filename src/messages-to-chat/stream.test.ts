@@ -126,6 +126,73 @@ describe("chatCompletionsStreamToMessagesStream", () => {
     expect(cancelled).toBe("client gone");
   });
 
+  it("ends a stalled stream after the idle timeout with a retryable error and cancels the upstream", async () => {
+    const reasons: string[] = [];
+    let cancelled = false;
+    const first = new TextEncoder().encode(`data: ${JSON.stringify({ id: "c1", choices: [{ index: 0, delta: { content: "par" } }] })}\n\n`);
+    let sent = false;
+    const input = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        if (!sent) {
+          sent = true;
+          controller.enqueue(first);
+          return;
+        }
+        return new Promise(() => {});
+      },
+      cancel() {
+        cancelled = true;
+      },
+    });
+    const text = await new Response(
+      chatCompletionsStreamToMessagesStream(input, { idleTimeoutMs: 25, onAbnormalEnd: (r) => reasons.push(r) }),
+    ).text();
+
+    expect(text).toContain('"text":"par"');
+    expect(text).toContain('"type":"overloaded_error"');
+    expect(text).toContain("stalled");
+    expect(text).not.toContain("message_stop");
+    expect(reasons).toEqual(["stalled"]);
+    expect(cancelled).toBe(true);
+  });
+
+  it("closes normally when it stalls after a finish_reason (only the usage chunk is missing)", async () => {
+    const reasons: string[] = [];
+    const first = new TextEncoder().encode(
+      `data: ${JSON.stringify({ id: "c1", choices: [{ index: 0, delta: { content: "done" }, finish_reason: "stop" }] })}\n\n`,
+    );
+    let sent = false;
+    const input = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        if (!sent) {
+          sent = true;
+          controller.enqueue(first);
+          return;
+        }
+        return new Promise(() => {});
+      },
+    });
+    const text = await new Response(
+      chatCompletionsStreamToMessagesStream(input, { idleTimeoutMs: 25, onAbnormalEnd: (r) => reasons.push(r) }),
+    ).text();
+
+    expect(text).toContain('"stop_reason":"end_turn"');
+    expect(text).toContain("message_stop");
+    expect(text).not.toContain("overloaded_error");
+    expect(reasons).toEqual([]);
+  });
+
+  it("reports a truncated stream through onAbnormalEnd", async () => {
+    const reasons: string[] = [];
+    const body = `data: ${JSON.stringify({ id: "c1", choices: [{ index: 0, delta: { content: "par" } }] })}\n\n`;
+    const text = await new Response(
+      chatCompletionsStreamToMessagesStream(new Response(body).body!, { onAbnormalEnd: (r) => reasons.push(r) }),
+    ).text();
+
+    expect(text).toContain('"type":"overloaded_error"');
+    expect(reasons).toEqual(["truncated"]);
+  });
+
   it("keeps an Anthropic-typed upstream error type as-is", async () => {
     const events = await translate([{ error: { message: "slow down", type: "rate_limit_error" } }]);
 

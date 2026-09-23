@@ -1,11 +1,17 @@
 // OpenAI Chat Completions chunk SSE → Anthropic Messages event SSE.
 
 import { responsesErrorToMessagesError } from "../messages-to-responses/error.js";
+import { readWithIdleTimeout, STREAM_IDLE_TIMEOUT_MS } from "../shared/idle-read.js";
 import { extractChatCompletionsUsage, mapFinishReason } from "./response.js";
+
+export const CHAT_COMPLETIONS_STREAM_IDLE_TIMEOUT_MS = STREAM_IDLE_TIMEOUT_MS;
 
 export type ChatCompletionsStreamOptions = {
   /** Model reported on `message_start`; defaults to the upstream chunk `model`. */
   model?: string;
+  idleTimeoutMs?: number;
+  /** Fired when the stream ends abnormally (stalled or truncated). */
+  onAbnormalEnd?: (reason: "stalled" | "truncated") => void;
 };
 
 export function chatCompletionsStreamToMessagesStream(
@@ -13,6 +19,7 @@ export function chatCompletionsStreamToMessagesStream(
   options?: ChatCompletionsStreamOptions,
 ): ReadableStream<Uint8Array> {
   const canonicalModel = options?.model;
+  const idleTimeoutMs = options?.idleTimeoutMs ?? CHAT_COMPLETIONS_STREAM_IDLE_TIMEOUT_MS;
   const encoder = new TextEncoder();
   const decoder = new TextDecoder();
   const state = new ChatTranslatorState(canonicalModel);
@@ -25,25 +32,34 @@ export function chatCompletionsStreamToMessagesStream(
         for (const event of state.drain()) controller.enqueue(encoder.encode(event));
       };
       try {
+        let stalled = false;
         for (;;) {
-          const { value, done } = await reader.read();
-          if (done) break;
-          lineBuffer += decoder.decode(value, { stream: true });
+          const result = await readWithIdleTimeout(reader, idleTimeoutMs);
+          if (result === "idle_timeout") {
+            stalled = true;
+            reader.cancel("chat completions stream idle timeout").catch(() => {});
+            break;
+          }
+          if (result.done) break;
+          lineBuffer += decoder.decode(result.value, { stream: true });
           const lines = lineBuffer.split("\n");
           lineBuffer = lines.pop() ?? "";
           for (const line of lines) handleLine(line, state);
           flush();
         }
-        if (lineBuffer.length > 0) handleLine(lineBuffer, state);
+        if (!stalled && lineBuffer.length > 0) handleLine(lineBuffer, state);
         // A finish_reason arrived but the trailing usage-only chunk never
         // did — still a complete turn, close it normally with zero usage.
         if (!state.finished && state.hasFinishReason) state.finish();
-        // EOF without a finish_reason: truncated upstream stream. Emit a
+        // No finish_reason: truncated or stalled upstream stream. Emit a
         // retryable error instead of fabricating a clean end_turn.
         if (!state.finished) {
           state.finishAbnormally(
-            "Upstream model stream ended without completing the response. Please retry.",
+            stalled
+              ? `Upstream model stream stalled: no data for ${Math.round(idleTimeoutMs / 1000)}s. Please retry.`
+              : "Upstream model stream ended without completing the response. Please retry.",
           );
+          options?.onAbnormalEnd?.(stalled ? "stalled" : "truncated");
         }
         flush();
         controller.close();
