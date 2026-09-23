@@ -112,6 +112,7 @@ class ChatTranslatorState {
   private liveCallIndex: number | null = null;
   // Chat tool_calls are keyed by their array index within the delta.
   private toolCalls = new Map<number, ToolCall>();
+  private positionKeys = new Map<number, number>();
   private deferred: Deferred[] = [];
 
   constructor(
@@ -224,9 +225,8 @@ class ChatTranslatorState {
     this.pushDelta(this.live.index, kind, text);
   }
 
-  // Some vendors omit `index`; parallel calls are then told apart by their position in the delta.
   private emitToolCallDelta(call: Record<string, unknown>, position: number): void {
-    const callIndex = typeof call.index === "number" ? call.index : position;
+    const callIndex = this.callKey(call, position);
     const fn = (call.function ?? {}) as Record<string, unknown>;
     let toolCall = this.toolCalls.get(callIndex);
     if (!toolCall) {
@@ -251,6 +251,18 @@ class ChatTranslatorState {
     } else {
       toolCall.args += fn.arguments;
     }
+  }
+
+  // Some vendors omit `index`: calls in one delta are told apart by position, and a new
+  // `id` at an already-used position starts a new call instead of extending the old one.
+  private callKey(call: Record<string, unknown>, position: number): number {
+    if (typeof call.index === "number") return call.index;
+    const key = this.positionKeys.get(position) ?? position;
+    const current = this.toolCalls.get(key);
+    if (typeof call.id !== "string" || !call.id || !current || current.id === call.id) return key;
+    const next = Math.max(...this.toolCalls.keys()) + 1;
+    this.positionKeys.set(position, next);
+    return next;
   }
 
   private pushDelta(index: number, kind: OpenBlock["kind"], text: string): void {

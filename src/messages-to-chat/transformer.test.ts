@@ -989,6 +989,27 @@ describe("chatCompletionsStreamToMessagesStream — edge cases", () => {
     expect(messageDelta.delta.stop_reason).toBe("max_tokens");
   });
 
+  it("starts a new tool call when an index-less chunk carries a new id at the same position", async () => {
+    const body = [
+      line({ id: "c", model: "m", choices: [{ index: 0, delta: { tool_calls: [{ id: "a", function: { name: "Read", arguments: '{"p":1}' } }] } }] }),
+      line({ id: "c", model: "m", choices: [{ index: 0, delta: { tool_calls: [{ id: "b", function: { name: "Write", arguments: '{"q":' } }] } }] }),
+      line({ id: "c", model: "m", choices: [{ index: 0, delta: { tool_calls: [{ function: { arguments: "2}" } }] } }] }),
+      line({ id: "c", model: "m", choices: [{ index: 0, delta: {}, finish_reason: "tool_calls" }], usage }),
+      "data: [DONE]",
+      "",
+    ].join("\n\n");
+    const out = await frames(chatCompletionsStreamToMessagesStream(text(body)));
+    const starts = out.filter((f) => f.type === "content_block_start") as Array<{ index: number; content_block: Record<string, unknown> }>;
+    expect(starts.map((f) => [f.content_block.id, f.content_block.name])).toEqual([["a", "Read"], ["b", "Write"]]);
+    const json = (index: number) =>
+      out
+        .filter((f) => f.type === "content_block_delta" && (f as { index: number }).index === index)
+        .map((f) => (f.delta as { partial_json: string }).partial_json)
+        .join("");
+    expect(JSON.parse(json(starts[0].index))).toEqual({ p: 1 });
+    expect(JSON.parse(json(starts[1].index))).toEqual({ q: 2 });
+  });
+
   it("assembles tool arguments split across chunks into one input_json stream", async () => {
     const body = [
       line({ id: "c", model: "m", choices: [{ index: 0, delta: { tool_calls: [{ index: 0, id: "t1", function: { name: "f", arguments: '{"q":' } }] } }] }),
