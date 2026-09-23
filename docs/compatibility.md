@@ -16,7 +16,7 @@ Evidence column:
 | System prompt | `system` → `instructions`. System-role messages inside `messages[]` become system input items. | `system` → leading `system` message. Same handling for system-role messages. | U, L |
 | Mid-turn user steers (Claude Code `<system-reminder>` in tool results) | Re-surfaced as user input items | Re-surfaced as user messages | U |
 | Tool calls and results | `function_call` / `function_call_output`; functions sent with `strict: false` | `tool_calls` / `tool` messages | U, L, S |
-| Parallel tool calls | Supported | Supported, including vendors that omit the per-call `index` (told apart by position) | U, S |
+| Parallel tool calls | Supported | Supported, including vendors that omit the per-call `index` (told apart by position). The first call streams live; later calls are emitted after it so only one block is open at a time | U, S |
 | `tool_choice` | `auto` → `auto`, `any` → `required`, `none` → `none`, `tool` → forced function. Forcing a non-function or unknown tool is omitted. | Same | U |
 | Tool names over 64 characters | Shortened to a stable 64-character hashed name in `tools`, history, and `tool_choice`. Pass `toolNameRestoreMap(request)` as the reply/stream `toolNames` option to get the original names back. | Same | U |
 | Images in user turns | Base64 → data URL, URL passed through. Optional `mapImageSource` filter can drop images with a note. | Base64 → data URL, URL passed through. No filter hook. | U, S |

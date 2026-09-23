@@ -37,6 +37,7 @@ export function assertMessagesStreamGrammar(frames: SseFrame[]): MessagesStreamE
         break;
       case "content_block_start":
         expect(sawMessageDelta).toBe(false);
+        expect(open.size).toBe(0);
         expect(event.index).toBe(nextIndex++);
         open.set(event.index, event.content_block.type);
         break;
