@@ -379,12 +379,12 @@ function convertTools(tools: unknown): Array<Record<string, unknown>> {
     if (!tool || typeof tool !== "object") continue;
     const type = typeof tool.type === "string" ? tool.type : "";
     const name = typeof tool.name === "string" ? tool.name : "";
-    if (type.startsWith("web_search") || name === "web_search") {
+    if (isServerTool(tool, "web_search")) {
       out.push({ type: "web_search" });
       continue;
     }
     // No Responses equivalent for these server tools; do not mis-map them to client functions.
-    if (type.startsWith("web_fetch") || name === "web_fetch" || type.startsWith("code_execution")) {
+    if (isServerTool(tool, "web_fetch") || type.startsWith("code_execution")) {
       continue;
     }
     if (!name) continue;
@@ -407,12 +407,15 @@ function convertTools(tools: unknown): Array<Record<string, unknown>> {
 /** True when the body asks for the native web_fetch server tool. */
 export function hasWebFetchTool(body: Record<string, unknown>): boolean {
   if (!Array.isArray(body.tools)) return false;
-  return (body.tools as Array<Record<string, unknown>>).some((tool) => {
-    if (!tool || typeof tool !== "object") return false;
-    const type = typeof tool.type === "string" ? tool.type : "";
-    const name = typeof tool.name === "string" ? tool.name : "";
-    return type.startsWith("web_fetch") || name === "web_fetch";
-  });
+  return (body.tools as Array<Record<string, unknown>>).some(
+    (tool) => !!tool && typeof tool === "object" && isServerTool(tool, "web_fetch"),
+  );
+}
+
+// A client tool that happens to share the name always carries an `input_schema`.
+function isServerTool(tool: Record<string, unknown>, kind: "web_search" | "web_fetch"): boolean {
+  if (typeof tool.type === "string" && tool.type.startsWith(kind)) return true;
+  return tool.name === kind && tool.input_schema === undefined;
 }
 
 /**

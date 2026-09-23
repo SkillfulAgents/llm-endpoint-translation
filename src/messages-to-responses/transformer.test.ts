@@ -155,6 +155,25 @@ describe("anthropicRequestToResponses", () => {
     ).toBe(false);
   });
 
+  it("keeps client function tools named web_search / web_fetch as functions", () => {
+    const schema = { type: "object", properties: { q: { type: "string" } } };
+    const body = {
+      model: "m",
+      max_tokens: 10,
+      messages: [{ role: "user", content: "hi" }],
+      tools: [
+        { name: "web_search", description: "internal search", input_schema: schema },
+        { name: "web_fetch", input_schema: schema },
+      ],
+    };
+    const out = anthropicRequestToResponses(body);
+    expect(out.tools).toEqual([
+      expect.objectContaining({ type: "function", name: "web_search", parameters: schema }),
+      expect.objectContaining({ type: "function", name: "web_fetch", parameters: schema }),
+    ]);
+    expect(hasWebFetchTool(body)).toBe(false);
+  });
+
   it("translates tool_choice only when the forced function exists", () => {
     const tools = [{ name: "search", input_schema: { type: "object", properties: {} } }];
     // auto → bare string "auto" (Responses API rejects { type: "auto" })
