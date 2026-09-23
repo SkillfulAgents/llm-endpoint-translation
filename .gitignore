@@ -3,3 +3,4 @@ dist
 coverage
 bench/captures/
 bench/results/
+*.tgz
