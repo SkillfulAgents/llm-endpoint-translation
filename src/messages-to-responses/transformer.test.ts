@@ -585,6 +585,22 @@ describe("responsesSSEToAnthropicSSE", () => {
     });
   }
 
+  it("emits function_call arguments carried only on the finished item", async () => {
+    const args = '{"file_path":"/etc/hostname"}';
+    const source = sourceFrom([
+      { type: "response.created", response: { id: "resp_1", model: "grok-4.5" } },
+      { type: "response.output_item.added", item: { id: "fc_1", type: "function_call", call_id: "call_1", name: "Read" } },
+      { type: "response.output_item.done", item: { id: "fc_1", type: "function_call", call_id: "call_1", name: "Read", arguments: args } },
+      { type: "response.output_item.done", item: { id: "fc_2", type: "function_call", call_id: "call_2", name: "Read", arguments: args } },
+      { type: "response.completed", response: { usage: { input_tokens: 10, output_tokens: 2 } } },
+    ]);
+    const out = await collect(responsesSSEToAnthropicSSE(source));
+    const deltas = out.match(/"partial_json":"(?:[^"\\]|\\.)*"/g) ?? [];
+    expect(deltas).toEqual([`"partial_json":${JSON.stringify(args)}`, `"partial_json":${JSON.stringify(args)}`]);
+    expect(out).toContain('"id":"call_2","name":"Read"');
+    expect(out).toContain('"stop_reason":"tool_use"');
+  });
+
   it("translates a text stream into Anthropic events with usage", async () => {
     const source = sourceFrom([
       { type: "response.created", response: { id: "resp_1", model: "gpt-5.5" } },

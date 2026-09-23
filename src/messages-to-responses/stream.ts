@@ -144,6 +144,7 @@ class ResponsesTranslatorState {
   // duplicate content_block_stop (double-stop makes the SDK dispatch a
   // tool_use twice → duplicated turns).
   private stopped = new Set<number>();
+  private argsStreamed = new Set<number>();
 
   handleEvent(event: Record<string, unknown>): void {
     if (this.finishedMessage) return;
@@ -334,6 +335,7 @@ class ResponsesTranslatorState {
     if (!block) return;
     const delta = typeof event.delta === "string" ? event.delta : "";
     if (!delta) return;
+    this.argsStreamed.add(block.index);
     this.pending.push(
       sseEvent("content_block_delta", {
         type: "content_block_delta",
@@ -351,8 +353,19 @@ class ResponsesTranslatorState {
       return;
     }
     const itemId = typeof item.id === "string" ? item.id : "";
+    if (item.type === "function_call" && !this.blocks.has(itemId)) this.onItemAdded(event);
     const block = this.blocks.get(itemId);
     if (!block) return;
+    // Some vendors send the arguments only on the finished item, never as deltas.
+    if (
+      item.type === "function_call" &&
+      !this.argsStreamed.has(block.index) &&
+      !this.stopped.has(block.index) &&
+      typeof item.arguments === "string" &&
+      item.arguments
+    ) {
+      this.onArgsDelta({ item_id: itemId, delta: item.arguments });
+    }
     this.emitBlockStop(block.index);
   }
 
