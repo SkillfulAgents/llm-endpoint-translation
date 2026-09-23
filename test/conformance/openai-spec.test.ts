@@ -41,4 +41,14 @@ describe("Messages request → CreateChatCompletionRequest conforms to the OpenA
   it.each(Object.entries(messagesRequests))("%s", (_name, request) => {
     assertOpenAISchema("CreateChatCompletionRequest", messagesRequestToChatCompletions(request));
   });
+
+  it.each(Object.entries(messagesRequests))("%s (max_completion_tokens, no reasoning_effort)", (_name, request) => {
+    assertOpenAISchema(
+      "CreateChatCompletionRequest",
+      messagesRequestToChatCompletions(request, {
+        tokenLimitField: "max_completion_tokens",
+        mapReasoningEffort: () => undefined,
+      }),
+    );
+  });
 });

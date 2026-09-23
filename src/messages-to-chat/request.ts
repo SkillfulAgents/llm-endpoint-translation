@@ -14,6 +14,10 @@ const CHAT_EFFORT_LEVELS = new Set(["low", "medium", "high", "xhigh", "max"]);
 export type ChatCompletionsRequestOptions = {
   /** `reasoning_effort` sent for `thinking: disabled`; default `none`. */
   disabledReasoningEffort?: string;
+  /** Per-provider effort mapping; wins over the default. Return undefined to omit `reasoning_effort`. */
+  mapReasoningEffort?: (body: Record<string, unknown>) => string | undefined;
+  /** Token-limit field name; default `max_tokens`. OpenAI's GPT-5 chat models require `max_completion_tokens`. */
+  tokenLimitField?: "max_tokens" | "max_completion_tokens";
 };
 
 /**
@@ -43,7 +47,7 @@ export function messagesRequestToChatCompletions(
 ): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   if (typeof body.model === "string") out.model = body.model;
-  if (typeof body.max_tokens === "number") out.max_tokens = body.max_tokens;
+  if (typeof body.max_tokens === "number") out[options.tokenLimitField ?? "max_tokens"] = body.max_tokens;
   if (typeof body.stream === "boolean") out.stream = body.stream;
   // Chat Completions only reports usage on the terminal chunk when asked.
   if (body.stream === true) out.stream_options = { include_usage: true };
@@ -52,7 +56,9 @@ export function messagesRequestToChatCompletions(
   if (Array.isArray(body.stop_sequences) && body.stop_sequences.length > 0) {
     out.stop = body.stop_sequences;
   }
-  const reasoningEffort = mapChatReasoningEffort(body, options);
+  const reasoningEffort = options.mapReasoningEffort
+    ? options.mapReasoningEffort(body)
+    : mapChatReasoningEffort(body, options);
   if (reasoningEffort) out.reasoning_effort = reasoningEffort;
   // Reasoning the model emits comes back as `reasoning_content`.
 
