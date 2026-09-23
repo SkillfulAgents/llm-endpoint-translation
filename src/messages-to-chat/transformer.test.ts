@@ -649,3 +649,351 @@ describe("chatCompletionsStreamToMessagesStream — refusals and restored tool n
     expect(out.find((f) => f.type === "content_block_start")?.content_block).toMatchObject({ type: "tool_use", name: long });
   });
 });
+
+describe("anthropicRequestToChatCompletions — edge cases", () => {
+  const tools = [{ name: "f", input_schema: { type: "object" } }];
+
+  it("skips null messages, unknown roles, and non-array content", () => {
+    const out = anthropicRequestToChatCompletions({
+      model: "m",
+      messages: [null, { role: "tool", content: "x" }, { role: "user", content: 5 }, { role: "user", content: "kept" }],
+    });
+    expect(out.messages).toEqual([{ role: "user", content: "kept" }]);
+  });
+
+  it("drops an assistant turn that only carries thinking", () => {
+    const out = anthropicRequestToChatCompletions({
+      model: "m",
+      messages: [
+        { role: "user", content: "hi" },
+        { role: "assistant", content: [{ type: "thinking", thinking: "hmm", signature: "s" }] },
+      ],
+    });
+    expect(out.messages).toEqual([{ role: "user", content: "hi" }]);
+  });
+
+  it("sends null content for a tool-call-only assistant turn and {} for a missing input", () => {
+    const out = anthropicRequestToChatCompletions({
+      model: "m",
+      messages: [{ role: "assistant", content: [{ type: "tool_use", id: "t1", name: "f" }] }],
+    });
+    expect(out.messages).toEqual([
+      {
+        role: "assistant",
+        content: null,
+        tool_calls: [{ id: "t1", type: "function", function: { name: "f", arguments: "{}" } }],
+      },
+    ]);
+  });
+
+  it("joins several assistant text blocks around a tool call into one message", () => {
+    const out = anthropicRequestToChatCompletions({
+      model: "m",
+      messages: [
+        {
+          role: "assistant",
+          content: [
+            { type: "text", text: "a" },
+            { type: "tool_use", id: "t1", name: "f", input: { q: 1 } },
+            { type: "text", text: "b" },
+          ],
+        },
+      ],
+    });
+    expect(out.messages).toEqual([
+      {
+        role: "assistant",
+        content: "a\n\nb",
+        tool_calls: [{ id: "t1", type: "function", function: { name: "f", arguments: '{"q":1}' } }],
+      },
+    ]);
+  });
+
+  it("orders tool messages first, then follow-ups, then the user's own text", () => {
+    const out = anthropicRequestToChatCompletions({
+      model: "m",
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: "and now?" },
+            {
+              type: "tool_result",
+              tool_use_id: "t1",
+              content: [{ type: "image", source: { type: "url", url: "https://x.test/1.png" } }],
+            },
+            { type: "tool_result", tool_use_id: "t2", content: "two" },
+          ],
+        },
+      ],
+    });
+    expect(out.messages).toEqual([
+      { role: "tool", tool_call_id: "t1", content: "" },
+      { role: "tool", tool_call_id: "t2", content: "two" },
+      {
+        role: "user",
+        content: [
+          { type: "text", text: "[image output from tool t1]" },
+          { type: "image_url", image_url: { url: "https://x.test/1.png" } },
+        ],
+      },
+      { role: "user", content: "and now?" },
+    ]);
+  });
+
+  it("stringifies object tool_result content and skips tool_results without an id", () => {
+    const out = anthropicRequestToChatCompletions({
+      model: "m",
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "tool_result", tool_use_id: "t1", content: { exit: 0 } },
+            { type: "tool_result", content: "orphan" },
+          ],
+        },
+      ],
+    });
+    expect(out.messages).toEqual([{ role: "tool", tool_call_id: "t1", content: '{"exit":0}' }]);
+  });
+
+  it("keeps a mixed user turn as parts and drops images with no usable source", () => {
+    const out = anthropicRequestToChatCompletions({
+      model: "m",
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: "look" },
+            { type: "image", source: { type: "base64", media_type: "image/png", data: "" } },
+            { type: "image", source: { type: "base64", media_type: "image/png", data: "AAA" } },
+            { type: "document", source: { type: "file", file_id: "file_1" } },
+          ],
+        },
+      ],
+    });
+    expect(out.messages).toEqual([
+      {
+        role: "user",
+        content: [
+          { type: "text", text: "look" },
+          { type: "image_url", image_url: { url: "data:image/png;base64,AAA" } },
+        ],
+      },
+    ]);
+  });
+
+  it("drops an empty system-role message and joins a system block array", () => {
+    const out = anthropicRequestToChatCompletions({
+      model: "m",
+      system: [{ type: "text", text: "one" }, { type: "text", text: "two" }],
+      messages: [{ role: "system", content: "   " }, { role: "user", content: "hi" }],
+    });
+    expect(out.messages).toEqual([
+      { role: "system", content: "one\n\ntwo" },
+      { role: "user", content: "hi" },
+    ]);
+  });
+
+  it("defaults a tool with no input_schema to an empty object schema and skips nameless tools", () => {
+    const out = anthropicRequestToChatCompletions({
+      model: "m",
+      messages: [],
+      tools: [{ name: "bare" }, { description: "no name" }, null],
+    });
+    expect(out.tools).toEqual([
+      { type: "function", function: { name: "bare", description: "", parameters: { type: "object", properties: {} } } },
+    ]);
+  });
+
+  it.each([
+    ["any with no tools", undefined, { type: "any" }],
+    ["tool naming a server tool", [{ type: "web_search_20250305", name: "web_search" }], { type: "tool", name: "web_search" }],
+    ["tool with no name", tools, { type: "tool" }],
+    ["unknown type", tools, { type: "sometimes" }],
+    ["non-object", tools, "auto"],
+  ])("omits tool_choice for %s", (_label, toolList, tool_choice) => {
+    const out = anthropicRequestToChatCompletions({ model: "m", messages: [], tools: toolList, tool_choice });
+    expect(out.tool_choice).toBeUndefined();
+  });
+
+  it("maps tool_choice any to required when function tools exist", () => {
+    const out = anthropicRequestToChatCompletions({ model: "m", messages: [], tools, tool_choice: { type: "any" } });
+    expect(out.tool_choice).toBe("required");
+  });
+
+  it("omits empty stop_sequences, non-numeric limits, and stream_options when not streaming", () => {
+    const out = anthropicRequestToChatCompletions({
+      model: "m",
+      max_tokens: "10",
+      stream: false,
+      stop_sequences: [],
+      messages: [],
+    });
+    expect(out).toEqual({ model: "m", stream: false, messages: [] });
+  });
+
+  it("lets thinking disabled win over an explicit effort", () => {
+    const out = anthropicRequestToChatCompletions({
+      model: "m",
+      thinking: { type: "disabled" },
+      output_config: { effort: "high" },
+      messages: [],
+    });
+    expect(out.reasoning_effort).toBe("none");
+  });
+});
+
+describe("chatCompletionsResponseToAnthropic — edge cases", () => {
+  it("returns an empty end_turn message for a reply with no choices", () => {
+    expect(chatCompletionsResponseToAnthropic({ id: "c", choices: [] })).toEqual({
+      id: "c",
+      type: "message",
+      role: "assistant",
+      model: "",
+      content: [],
+      stop_reason: "end_turn",
+      stop_sequence: null,
+      usage: { input_tokens: 0, output_tokens: 0, cache_creation_input_tokens: 0, cache_read_input_tokens: 0 },
+    });
+  });
+
+  it("falls back to {} for malformed or empty tool arguments", () => {
+    const out = chatCompletionsResponseToAnthropic({
+      choices: [
+        {
+          message: {
+            tool_calls: [
+              { id: "a", function: { name: "f", arguments: "{not json" } },
+              { id: "b", function: { name: "g", arguments: "" } },
+            ],
+          },
+          finish_reason: "tool_calls",
+        },
+      ],
+    });
+    expect((out.content as Array<Record<string, unknown>>).map((b) => b.input)).toEqual([{}, {}]);
+  });
+
+  it("reports tool_use when tool calls arrive with finish_reason stop", () => {
+    const out = chatCompletionsResponseToAnthropic({
+      choices: [{ message: { tool_calls: [{ id: "a", function: { name: "f", arguments: "{}" } }] }, finish_reason: "stop" }],
+    });
+    expect(out.stop_reason).toBe("tool_use");
+  });
+
+  it("prefers the model option over the upstream model", () => {
+    expect(chatCompletionsResponseToAnthropic({ model: "upstream-2026", choices: [] }, "alias").model).toBe("alias");
+  });
+
+  it("clamps input_tokens at 0 when cached tokens exceed prompt tokens", () => {
+    expect(translateChatUsage({ prompt_tokens: 5, completion_tokens: 1, prompt_tokens_details: { cached_tokens: 9 } })).toEqual({
+      input_tokens: 0,
+      output_tokens: 1,
+      cache_creation_input_tokens: 0,
+      cache_read_input_tokens: 9,
+    });
+  });
+});
+
+describe("chatCompletionsStreamToMessagesStream — edge cases", () => {
+  const text = (body: string) => new Response(body).body!;
+  const frames = async (stream: ReadableStream<Uint8Array>) =>
+    (await new Response(stream).text())
+      .split("\n")
+      .filter((l) => l.startsWith("data:"))
+      .map((l) => JSON.parse(l.slice(5)) as Record<string, unknown> & { delta?: Record<string, unknown> });
+  const line = (c: unknown) => `data: ${JSON.stringify(c)}`;
+  const usage = { prompt_tokens: 3, completion_tokens: 2 };
+
+  it("accepts CRLF line endings and data: without a space", async () => {
+    const body =
+      `data:${JSON.stringify({ id: "c", model: "m", choices: [{ index: 0, delta: { content: "hi" } }] })}\r\n\r\n` +
+      `${line({ id: "c", model: "m", choices: [{ index: 0, delta: {}, finish_reason: "stop" }], usage })}\r\n\r\n` +
+      "data: [DONE]\r\n\r\n";
+    const out = await frames(chatCompletionsStreamToMessagesStream(text(body)));
+    expect(out.map((f) => f.type)).toEqual([
+      "message_start",
+      "content_block_start",
+      "content_block_delta",
+      "content_block_stop",
+      "message_delta",
+      "message_stop",
+    ]);
+  });
+
+  it("translates a final chunk that has no trailing newline", async () => {
+    const body = line({ id: "c", model: "m", choices: [{ index: 0, delta: { content: "x" }, finish_reason: "stop" }], usage });
+    const out = await frames(chatCompletionsStreamToMessagesStream(text(body)));
+    expect(out.at(-1)?.type).toBe("message_stop");
+  });
+
+  it("ignores SSE comments, event lines, and chunks after the message is finished", async () => {
+    const body = [
+      ": keep-alive",
+      "event: chunk",
+      line({ id: "c", model: "m", choices: [{ index: 0, delta: { content: "a" }, finish_reason: "stop" }], usage }),
+      line({ id: "c", model: "m", choices: [{ index: 0, delta: { content: "late" } }] }),
+      "",
+    ].join("\n\n");
+    const out = await frames(chatCompletionsStreamToMessagesStream(text(body)));
+    const deltas = out.filter((f) => f.type === "content_block_delta").map((f) => f.delta?.text);
+    expect(deltas).toEqual(["a"]);
+    expect(out.filter((f) => f.type === "message_stop")).toHaveLength(1);
+  });
+
+  it("carries usage from the trailing usage-only chunk into message_delta", async () => {
+    const body = [
+      line({ id: "c", model: "m", choices: [{ index: 0, delta: { content: "a" }, finish_reason: "length" }] }),
+      line({ id: "c", model: "m", choices: [], usage: { ...usage, prompt_tokens_details: { cached_tokens: 1 } } }),
+      "data: [DONE]",
+      "",
+    ].join("\n\n");
+    const out = await frames(chatCompletionsStreamToMessagesStream(text(body)));
+    const messageDelta = out.find((f) => f.type === "message_delta") as { delta: Record<string, unknown>; usage: unknown };
+    expect(messageDelta.delta.stop_reason).toBe("max_tokens");
+    expect(messageDelta.usage).toEqual({
+      input_tokens: 2,
+      output_tokens: 2,
+      cache_creation_input_tokens: 0,
+      cache_read_input_tokens: 1,
+    });
+  });
+
+  it("assembles tool arguments split across chunks into one input_json stream", async () => {
+    const body = [
+      line({ id: "c", model: "m", choices: [{ index: 0, delta: { tool_calls: [{ index: 0, id: "t1", function: { name: "f", arguments: '{"q":' } }] } }] }),
+      line({ id: "c", model: "m", choices: [{ index: 0, delta: { tool_calls: [{ index: 0, function: { arguments: '"x"}' } }] } }] }),
+      line({ id: "c", model: "m", choices: [{ index: 0, delta: {}, finish_reason: "tool_calls" }], usage }),
+      "",
+    ].join("\n\n");
+    const out = await frames(chatCompletionsStreamToMessagesStream(text(body)));
+    const json = out
+      .filter((f) => f.delta?.type === "input_json_delta")
+      .map((f) => f.delta?.partial_json)
+      .join("");
+    expect(JSON.parse(json)).toEqual({ q: "x" });
+    expect(out.filter((f) => f.type === "content_block_start")).toHaveLength(1);
+  });
+
+  it("names a tool call without an id after its index", async () => {
+    const body = [
+      line({ id: "c", model: "m", choices: [{ index: 0, delta: { tool_calls: [{ index: 3, function: { name: "f", arguments: "{}" } }] }, finish_reason: "tool_calls" }], usage }),
+      "",
+    ].join("\n\n");
+    const out = await frames(chatCompletionsStreamToMessagesStream(text(body)));
+    expect(out.find((f) => f.type === "content_block_start")?.content_block).toMatchObject({ type: "tool_use", id: "call_3" });
+  });
+
+  it("emits message_start before an error chunk that arrives first", async () => {
+    const body = `${line({ error: { message: "bad key", type: "invalid_request_error" } })}\n\n`;
+    const out = await frames(chatCompletionsStreamToMessagesStream(text(body)));
+    expect(out.map((f) => f.type)).toEqual(["message_start", "error"]);
+    expect(out[1].error).toEqual({ type: "invalid_request_error", message: "bad key" });
+  });
+
+  it("ends an empty upstream stream with an error event", async () => {
+    const out = await frames(chatCompletionsStreamToMessagesStream(text("")));
+    expect(out.at(-1)?.type).toBe("error");
+  });
+});
