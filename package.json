@@ -20,6 +20,7 @@
     "node": ">=20"
   },
   "scripts": {
+    "prepare": "npm run build",
     "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
