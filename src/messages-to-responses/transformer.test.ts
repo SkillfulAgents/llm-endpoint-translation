@@ -585,6 +585,18 @@ describe("responsesSSEToAnthropicSSE", () => {
     });
   }
 
+  it("does not report a consumer cancel as an abnormal end", async () => {
+    const reasons: string[] = [];
+    const input = new ReadableStream<Uint8Array>({
+      pull() {
+        return new Promise(() => {});
+      },
+    });
+    await responsesSSEToAnthropicSSE(input, undefined, undefined, { onAbnormalEnd: (r) => reasons.push(r) }).cancel("client gone");
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(reasons).toEqual([]);
+  });
+
   it("translates a text stream into Anthropic events with usage", async () => {
     const source = sourceFrom([
       { type: "response.created", response: { id: "resp_1", model: "gpt-5.5" } },

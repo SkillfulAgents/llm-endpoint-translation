@@ -39,6 +39,8 @@ export function responsesStreamToMessagesStream(
   );
   const reader = input.getReader();
   let lineBuffer = "";
+  // A client cancel ends the upstream read too; that is not an upstream fault.
+  let cancelled = false;
 
   return new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -68,6 +70,7 @@ export function responsesStreamToMessagesStream(
           for (const line of lines) handleLine(line, state);
           flush();
         }
+        if (cancelled) return;
         if (lineBuffer.length > 0) handleLine(lineBuffer, state);
         // EOF without a terminal event (response.completed / incomplete /
         // failed / error). A healthy Responses stream ALWAYS ends with one, so
@@ -89,6 +92,7 @@ export function responsesStreamToMessagesStream(
       }
     },
     cancel(reason) {
+      cancelled = true;
       return reader.cancel(reason);
     },
   });
