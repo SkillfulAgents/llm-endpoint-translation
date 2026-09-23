@@ -211,6 +211,34 @@ The library only converts data. Whoever runs it owns these:
 - **Per-provider settings.** Effort mapping, which token-limit field to send, per-model output caps, and removing token-limit fields for providers that reject them (as Codex-style upstreams do). Claude Code asks for up to 128k output tokens; `gpt-4.1-mini` rejects anything above 32,768.
 - **The reasoning replay scope.** Use one scope per upstream account and model (see `reasoningReplayScope` below). In `bench/switch.sh`, OpenAI accepted reasoning from `gpt-5.4-mini` replayed to `gpt-5.4` on the same account; replay across accounts is untested, and the scope prevents it.
 
+## Runtime load
+
+Measured 2026-09-23 in image `superagent-agent-container-base:0.5.30` (Node 22.23.2, 4 CPUs). The library ran in its own Node process in that image, not inside the agent server. Scripts and the rest of the bench are in [`bench/README.md`](bench/README.md).
+
+No runtime dependencies. Built `dist/*.js` is 103 KB (22 KB gzipped). Installing the v0.1.0 release tarball adds 113 KB to the image; the installed package is 249 KB on disk.
+
+**Idle** (fresh Node process, RSS after GC, median of 3):
+
+| | RSS | Heap | Import time |
+| --- | --- | --- | --- |
+| Node + `http` server | 52.6 MB | 5.9 MB | – |
+| + library imported | 53.2 MB | 6.3 MB | 14 ms |
+
+The library adds 0.6 MB RSS at idle. Idle CPU was the same with and without it.
+
+**Concurrent streams.** Each stream replays about 900 events (a ~600-word answer plus a tool call) for 30 s. `passthrough` is the same proxy with no translation.
+
+| Streams | Backend | Peak RSS | Peak heap | Proxy CPU (% of one core) |
+| --- | --- | --- | --- | --- |
+| 10 | passthrough | 91.7 MB | 12.1 MB | 9.9 |
+| 10 | responses | 87.8 MB | 14.9 MB | 12.1 |
+| 10 | chat | 94.1 MB | 13.4 MB | 11.1 |
+| 50 | passthrough | 112.2 MB | 23.5 MB | 17.2 |
+| 50 | responses | 122.1 MB | 26.5 MB | 19.2 |
+| 50 | chat | 118.7 MB | 26.2 MB | 18.8 |
+
+All 360 streams completed, and throughput matched across backends. At 50 streams, translation adds about 2 CPU percentage points and 6–10 MB peak RSS over passthrough. The ~30 MB jump from idle on the first request is Node's `fetch` warming up; passthrough shows it too.
+
 ## Options
 
 All options are optional.
