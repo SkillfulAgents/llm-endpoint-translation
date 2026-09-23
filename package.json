@@ -1,6 +1,6 @@
 {
   "name": "llm-endpoint-translation",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Bidirectional OpenAI Responses <> Anthropic Messages translation: requests, JSON replies, SSE streams, errors.",
   "license": "MIT",
