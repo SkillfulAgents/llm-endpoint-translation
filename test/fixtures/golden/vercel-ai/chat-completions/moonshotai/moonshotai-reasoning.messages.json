@@ -1,0 +1,25 @@
+{
+  "id": "chatcmpl-test-reasoning",
+  "type": "message",
+  "role": "assistant",
+  "model": "kimi-k2.6",
+  "content": [
+    {
+      "type": "thinking",
+      "thinking": "Let me count the letters carefully.",
+      "signature": ""
+    },
+    {
+      "type": "text",
+      "text": "There are three."
+    }
+  ],
+  "stop_reason": "end_turn",
+  "stop_sequence": null,
+  "usage": {
+    "input_tokens": 20,
+    "output_tokens": 30,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0
+  }
+}

@@ -2,6 +2,7 @@ import { describe, it } from "vitest";
 
 import {
   messagesErrorToResponsesError,
+  messagesRequestToChatCompletions,
   messagesRequestToResponses,
   messagesResponseToResponses,
   messagesStreamToResponsesStream,
@@ -33,5 +34,11 @@ describe("Messages stream → ResponseStreamEvent conforms to the OpenAI spec", 
 describe("Messages error → ErrorResponse conforms to the OpenAI spec", () => {
   it.each(messagesErrors)("$name", ({ body }) => {
     assertOpenAISchema("ErrorResponse", messagesErrorToResponsesError(body));
+  });
+});
+
+describe("Messages request → CreateChatCompletionRequest conforms to the OpenAI spec", () => {
+  it.each(Object.entries(messagesRequests))("%s", (_name, request) => {
+    assertOpenAISchema("CreateChatCompletionRequest", messagesRequestToChatCompletions(request));
   });
 });

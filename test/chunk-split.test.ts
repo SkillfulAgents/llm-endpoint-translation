@@ -1,6 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { messagesStreamToResponsesStream, responsesStreamToMessagesStream } from "../src";
+import {
+  chatCompletionsStreamToMessagesStream,
+  messagesStreamToResponsesStream,
+  responsesStreamToMessagesStream,
+} from "../src";
+import { chatSseText, chatStreams } from "./fixtures/chat-corpus";
 import { messagesStreams } from "./fixtures/messages-corpus";
 import { recordedResponsesTurns } from "./fixtures/responses-corpus";
 import { encode, readText, streamFromBytes, toSseText, type Json } from "./helpers/sse";
@@ -46,22 +51,30 @@ const unicodeStream: Json[] = [
   { type: "message_stop" },
 ];
 
-const cases: Array<{ name: string; translate: Translate; payloads: Json[] }> = [
+const cases: Array<{ name: string; translate: Translate; text: string }> = [
   ...messagesStreams.map(({ name, events }) => ({
     name: `messages→responses ${name}`,
     translate: messagesStreamToResponsesStream as Translate,
-    payloads: events,
+    text: toSseText(events),
   })),
-  { name: "messages→responses synthetic/unicode", translate: messagesStreamToResponsesStream as Translate, payloads: unicodeStream },
+  {
+    name: "messages→responses synthetic/unicode",
+    translate: messagesStreamToResponsesStream as Translate,
+    text: toSseText(unicodeStream),
+  },
   ...recordedResponsesTurns.map(({ vendor, name, source }) => ({
     name: `responses→messages ${vendor}/${name}`,
     translate: responsesStreamToMessagesStream as Translate,
-    payloads: source,
+    text: toSseText(source),
+  })),
+  ...chatStreams.map(({ vendor, name, chunks }) => ({
+    name: `chat→messages ${vendor}/${name}`,
+    translate: chatCompletionsStreamToMessagesStream as Translate,
+    text: chatSseText(chunks),
   })),
 ];
 
-describe.each(cases)("$name", ({ translate, payloads }) => {
-  const text = toSseText(payloads);
+describe.each(cases)("$name", ({ translate, text }) => {
   const bytes = encode(text);
   const run = (input: Uint8Array, cuts: number[] = []) => readText(translate(streamFromBytes(input, cuts)));
 

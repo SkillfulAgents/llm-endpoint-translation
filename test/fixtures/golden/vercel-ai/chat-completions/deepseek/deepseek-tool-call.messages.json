@@ -1,0 +1,29 @@
+{
+  "id": "7a630f5b-b7e6-4878-82f8-d77db164d42b",
+  "type": "message",
+  "role": "assistant",
+  "model": "deepseek-reasoner",
+  "content": [
+    {
+      "type": "thinking",
+      "thinking": "The user is asking for the weather in San Francisco. I have a weather tool available that can get weather information for a location. I should use this tool with the location parameter set to \"San Francisco\". Let me call the weather function.",
+      "signature": ""
+    },
+    {
+      "type": "tool_use",
+      "id": "call_00_9V0vrf86Pc9aelHCJMZqnJBo",
+      "name": "weather",
+      "input": {
+        "location": "San Francisco"
+      }
+    }
+  ],
+  "stop_reason": "tool_use",
+  "stop_sequence": null,
+  "usage": {
+    "input_tokens": 19,
+    "output_tokens": 92,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 320
+  }
+}

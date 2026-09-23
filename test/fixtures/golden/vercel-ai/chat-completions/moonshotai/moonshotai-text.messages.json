@@ -1,0 +1,20 @@
+{
+  "id": "chatcmpl-test-text",
+  "type": "message",
+  "role": "assistant",
+  "model": "kimi-k3",
+  "content": [
+    {
+      "type": "text",
+      "text": "Hello, world!"
+    }
+  ],
+  "stop_reason": "end_turn",
+  "stop_sequence": null,
+  "usage": {
+    "input_tokens": 9,
+    "output_tokens": 5,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0
+  }
+}

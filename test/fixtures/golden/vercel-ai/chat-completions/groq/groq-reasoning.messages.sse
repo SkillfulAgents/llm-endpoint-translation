@@ -1,0 +1,432 @@
+event: message_start
+data: {"type":"message_start","message":{"id":"chatcmpl-3556c041-562b-471f-9a90-763dbcea5a3f","type":"message","role":"assistant","model":"qwen/qwen3-32b","content":[],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":0,"output_tokens":0,"cache_creation_input_tokens":0,"cache_read_input_tokens":0}}}
+
+event: content_block_start
+data: {"type":"content_block_start","index":0,"content_block":{"type":"text","text":""}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"The"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" word"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" **"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"\""}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"str"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"aw"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"berry"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"\""}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"**"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" is"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" spelled"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" as"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" **"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"S"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"-T"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"-R"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"-A"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"-W"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"-B"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"-E"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"-R"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"-R"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"-Y"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"**"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"."}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" Breaking"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" it"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" down"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" letter"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" by"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" letter"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":":\n\n"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"1"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"."}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" **"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"S"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"**"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"  \n"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"2"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"."}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" **"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"T"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"**"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"  \n"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"3"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"."}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" **"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"R"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"**"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" ("}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"1"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"st"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" R"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":")"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"  \n"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"4"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"."}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" **"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"A"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"**"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"  \n"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"5"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"."}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" **"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"W"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"**"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"  \n"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"6"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"."}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" **"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"B"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"**"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"  \n"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"7"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"."}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" **"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"E"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"**"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"  \n"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"8"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"."}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" **"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"R"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"**"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" ("}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"2"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"nd"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" R"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":")"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"  \n"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"9"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"."}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" **"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"R"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"**"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" ("}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"3"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"rd"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" R"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":")"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"  \n"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"1"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"0"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"."}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" **"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"Y"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"**\n\n"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"**"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"Total"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" R"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"'s"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"**:"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" There"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" are"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" **"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"three"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"**"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" instances"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" of"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" the"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" letter"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" **"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"R"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"**"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" in"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" \""}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"str"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"aw"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"berry"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"\".\n\n"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"**"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"Final"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" Answer"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"**:"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" $\\"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"boxed"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"{"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"3"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"}$"}}
+
+event: content_block_stop
+data: {"type":"content_block_stop","index":0}
+
+event: message_delta
+data: {"type":"message_delta","delta":{"stop_reason":"end_turn","stop_sequence":null},"usage":{"input_tokens":17,"output_tokens":1107,"cache_creation_input_tokens":0,"cache_read_input_tokens":0}}
+
+event: message_stop
+data: {"type":"message_stop"}
+

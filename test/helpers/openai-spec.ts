@@ -8,7 +8,7 @@ const SPEC_ID = "https://openai-openapi.local/spec.json";
 type Schema = Record<string, unknown>;
 
 const vendored = JSON.parse(
-  readFileSync(join(import.meta.dirname, "../fixtures/external/openai-openapi/responses-schemas.json"), "utf8"),
+  readFileSync(join(import.meta.dirname, "../fixtures/external/openai-openapi/schemas.json"), "utf8"),
 ) as { source: { sha: string }; schemas: Record<string, Schema> };
 
 export const openaiSpecSha = vendored.source.sha;
@@ -66,7 +66,12 @@ function describeErrors(errors: ErrorObject[] | null | undefined): string {
     .join("\n");
 }
 
-export type OpenAISchemaName = "Response" | "CreateResponse" | "ResponseStreamEvent" | "ErrorResponse";
+export type OpenAISchemaName =
+  | "Response"
+  | "CreateResponse"
+  | "ResponseStreamEvent"
+  | "ErrorResponse"
+  | "CreateChatCompletionRequest";
 
 /** Throws with the spec's own error paths when `value` doesn't conform. */
 export function assertOpenAISchema(name: OpenAISchemaName, value: unknown): void {
