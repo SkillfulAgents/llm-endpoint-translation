@@ -427,7 +427,7 @@ class ResponsesTranslatorState {
     // tier, falling back to the last snapshot seen) so downstream JSONL
     // consumers can price the turn — see AnthropicUsage.speed.
     this.usage = withSpeedEcho(
-      extractResponsesUsage(response.usage as Record<string, unknown>),
+      extractResponsesUsage(response.usage as Record<string, unknown>, response.output),
       response.service_tier ?? this.lastServiceTier,
     );
   }

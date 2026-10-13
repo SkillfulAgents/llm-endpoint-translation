@@ -83,7 +83,7 @@ export function responsesResponseToMessages(
     stop_reason: stopReason,
     stop_sequence: null,
     usage: withSpeedEcho(
-      extractResponsesUsage(body.usage as Record<string, unknown> | undefined),
+      extractResponsesUsage(body.usage as Record<string, unknown> | undefined, body.output),
       body.service_tier,
     ),
   };
