@@ -32,9 +32,12 @@ export function servedSpeedEcho(tier: unknown): "slow" | "fast" | undefined {
 
 /**
  * Billable hosted web searches. xAI reports successful calls in
- * `usage.server_side_tool_usage_details.web_search_calls`. OpenAI has no count;
- * it bills `web_search_call` items whose action is `search` (page opens and
- * in-page finds are free).
+ * `usage.server_side_tool_usage_details.web_search_calls`; replies without that
+ * block only carry `num_server_side_tools_used`, and its `web_search_call`
+ * items have no `action`. Web search is the only server tool the Messages
+ * translation sends xAI, so that total is the search count. OpenAI has no
+ * count; it bills `web_search_call` items whose action is `search` (page opens
+ * and in-page finds are free).
  */
 export function countWebSearchRequests(
   usage: Record<string, unknown> | undefined,
@@ -45,6 +48,9 @@ export function countWebSearchRequests(
     | undefined;
   if (details && typeof details.web_search_calls === "number") {
     return details.web_search_calls;
+  }
+  if (typeof usage?.num_server_side_tools_used === "number") {
+    return usage.num_server_side_tools_used;
   }
   if (!Array.isArray(output)) return 0;
   return output.filter((item) => {

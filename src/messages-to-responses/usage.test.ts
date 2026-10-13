@@ -89,6 +89,73 @@ describe("extractResponsesUsage", () => {
     });
   });
 
+  it("does not bill OpenAI open_page or find_in_page actions", () => {
+    const output = [
+      { type: "web_search_call", action: { type: "open_page", url: "https://example.com" } },
+      { type: "web_search_call", action: { type: "find_in_page", pattern: "price" } },
+    ];
+    expect(extractResponsesUsage({ input_tokens: 10 }, output)).not.toHaveProperty("server_tool_use");
+  });
+
+  it("skips malformed output items", () => {
+    const output = [
+      null,
+      "web_search_call",
+      { type: "web_search_call" },
+      { type: "web_search_call", action: "search" },
+      { type: "web_search_call", action: { type: "search" } },
+      { type: "function_call", action: { type: "search" } },
+    ];
+    expect(extractResponsesUsage({ input_tokens: 10 }, output).server_tool_use).toEqual({
+      web_search_requests: 1,
+    });
+  });
+
+  it("treats a non-array output as no searches", () => {
+    expect(extractResponsesUsage({ input_tokens: 10 }, { type: "web_search_call" })).not.toHaveProperty(
+      "server_tool_use",
+    );
+  });
+
+  it("falls back to xAI's num_server_side_tools_used when the details block is absent", () => {
+    // Shape of a recorded xAI reply: the web_search_call item carries no action.
+    const usage = { input_tokens: 1941, output_tokens: 583, num_server_side_tools_used: 2 };
+    const output = [{ type: "web_search_call", status: "completed" }];
+    expect(extractResponsesUsage(usage, output).server_tool_use).toEqual({ web_search_requests: 2 });
+  });
+
+  it("trusts xAI's zero counts over output items", () => {
+    const output = [{ type: "web_search_call", action: { type: "search" } }];
+    expect(
+      extractResponsesUsage(
+        { input_tokens: 10, server_side_tool_usage_details: { web_search_calls: 0 }, num_server_side_tools_used: 1 },
+        output,
+      ),
+    ).not.toHaveProperty("server_tool_use");
+    expect(extractResponsesUsage({ input_tokens: 10, num_server_side_tools_used: 0 }, output)).not.toHaveProperty(
+      "server_tool_use",
+    );
+  });
+
+  it("keeps cache tokens and search count together", () => {
+    expect(
+      extractResponsesUsage(
+        {
+          input_tokens: 20_000,
+          output_tokens: 800,
+          input_tokens_details: { cached_tokens: 12_000, cache_write_tokens: 4_000 },
+        },
+        [{ type: "web_search_call", action: { type: "search", query: "Paris weather" } }],
+      ),
+    ).toEqual({
+      input_tokens: 4_000,
+      output_tokens: 800,
+      cache_creation_input_tokens: 4_000,
+      cache_read_input_tokens: 12_000,
+      server_tool_use: { web_search_requests: 1 },
+    });
+  });
+
   it("omits server_tool_use when no search ran", () => {
     expect(extractResponsesUsage({ input_tokens: 10 }, [])).not.toHaveProperty("server_tool_use");
   });

@@ -71,8 +71,10 @@ describe("recorded Responses stream → Messages stream", () => {
     if (completed) {
       expect(last.type).toBe("message_stop");
       const delta = events.find((e) => e.type === "message_delta");
-      const usage = (completed.response as Json).usage as Json;
-      expect(delta && delta.type === "message_delta" && delta.usage).toMatchObject(extractResponsesUsage(usage));
+      const response = completed.response as Json;
+      expect(delta && delta.type === "message_delta" && delta.usage).toMatchObject(
+        extractResponsesUsage(response.usage as Json, response.output),
+      );
     } else {
       expect(last.type).toBe("error");
     }
@@ -89,6 +91,29 @@ describe.each(responsesVendors)("recorded %s Responses JSON → Messages JSON", 
     await expect(JSON.stringify(out, null, 2) + "\n").toMatchFileSnapshot(
       join(GOLDEN, vendor, `${name}.messages.json`),
     );
+  });
+});
+
+describe("recorded hosted web search replies → billable search count", () => {
+  // OpenAI: one `search`, one `open_page`, one `find_in_page`; only the search is billed.
+  // xAI: one action-less `web_search_call`, `num_server_side_tools_used: 1`.
+  it.each([
+    ["openai", "openai-web-search-tool.1", 1],
+    ["xai", "xai-web-search-tool.1", 1],
+  ] as const)("%s/%s bills %d search", (vendor, name, searches) => {
+    expect(responsesResponseToMessages(readJson(vendor, name)).usage).toMatchObject({
+      server_tool_use: { web_search_requests: searches },
+    });
+  });
+
+  it("reports no searches for recorded replies without a web_search_call", () => {
+    for (const vendor of responsesVendors) {
+      for (const name of list(vendor, ".json").filter((n) => !n.includes("-error.") && !n.includes("web-search"))) {
+        expect(responsesResponseToMessages(readJson(vendor, name)).usage, `${vendor}/${name}`).not.toHaveProperty(
+          "server_tool_use",
+        );
+      }
+    }
   });
 });
 
