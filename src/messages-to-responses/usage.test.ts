@@ -58,6 +58,41 @@ describe("extractResponsesUsage", () => {
     });
   });
 
+  it("counts OpenAI web_search_call items with a search action", () => {
+    const output = [
+      { type: "web_search_call", action: { type: "search", query: "weather in Paris" } },
+      { type: "web_search_call", action: { type: "open_page", url: "https://example.com" } },
+      { type: "web_search_call", action: { type: "search", query: "Paris forecast" } },
+      { type: "message", content: [] },
+    ];
+    expect(extractResponsesUsage({ input_tokens: 10, output_tokens: 5 }, output)).toEqual({
+      input_tokens: 10,
+      output_tokens: 5,
+      cache_creation_input_tokens: 0,
+      cache_read_input_tokens: 0,
+      server_tool_use: { web_search_requests: 2 },
+    });
+  });
+
+  it("prefers xAI's successful web_search_calls count over output items", () => {
+    const usage = {
+      input_tokens: 10,
+      output_tokens: 5,
+      server_side_tool_usage_details: { web_search_calls: 1, x_search_calls: 2 },
+    };
+    const output = [
+      { type: "web_search_call", action: { type: "search" } },
+      { type: "web_search_call", action: { type: "search" } },
+    ];
+    expect(extractResponsesUsage(usage, output).server_tool_use).toEqual({
+      web_search_requests: 1,
+    });
+  });
+
+  it("omits server_tool_use when no search ran", () => {
+    expect(extractResponsesUsage({ input_tokens: 10 }, [])).not.toHaveProperty("server_tool_use");
+  });
+
   it("clamps input_tokens at 0 when cached exceeds input", () => {
     const u = extractResponsesUsage({
       input_tokens: 10,

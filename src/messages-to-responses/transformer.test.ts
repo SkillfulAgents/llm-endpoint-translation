@@ -615,6 +615,26 @@ describe("responsesSSEToAnthropicSSE", () => {
     expect(out).toContain("event: message_stop");
   });
 
+  it("reports hosted web searches from the terminal response in message_delta usage", async () => {
+    const source = sourceFrom([
+      { type: "response.created", response: { id: "resp_1", model: "gpt-5.5" } },
+      { type: "response.output_item.added", item: { id: "msg_1", type: "message" } },
+      { type: "response.output_text.delta", item_id: "msg_1", delta: "Sunny" },
+      {
+        type: "response.completed",
+        response: {
+          usage: { input_tokens: 10, output_tokens: 2 },
+          output: [
+            { type: "web_search_call", id: "ws_1", action: { type: "search", query: "weather in Paris" } },
+            { type: "message", id: "msg_1", content: [{ type: "output_text", text: "Sunny" }] },
+          ],
+        },
+      },
+    ]);
+    const out = await collect(responsesSSEToAnthropicSSE(source));
+    expect(out).toContain('"server_tool_use":{"web_search_requests":1}');
+  });
+
   it("emits the canonical model in message_start, not OpenAI's dated snapshot", async () => {
     const source = sourceFrom([
       { type: "response.created", response: { id: "resp_1", model: "gpt-5.5-2026-04-23" } },

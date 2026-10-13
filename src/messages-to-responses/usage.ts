@@ -18,6 +18,8 @@ export type AnthropicUsage = {
   // for flex. Absent = standard. Always derived from the vendor RESPONSE
   // (what was served), never from the request.
   speed?: "slow" | "fast";
+  // Billable hosted web searches, in Anthropic's shape. Absent when zero.
+  server_tool_use?: { web_search_requests: number };
 };
 
 /** Vendor `service_tier` response echo → the `usage.speed` wire echo. */
@@ -28,8 +30,38 @@ export function servedSpeedEcho(tier: unknown): "slow" | "fast" | undefined {
   return undefined;
 }
 
+/**
+ * Billable hosted web searches. xAI reports successful calls in
+ * `usage.server_side_tool_usage_details.web_search_calls`. OpenAI has no count;
+ * it bills `web_search_call` items whose action is `search` (page opens and
+ * in-page finds are free).
+ */
+export function countWebSearchRequests(
+  usage: Record<string, unknown> | undefined,
+  output: unknown,
+): number {
+  const details = usage?.server_side_tool_usage_details as
+    | Record<string, unknown>
+    | undefined;
+  if (details && typeof details.web_search_calls === "number") {
+    return details.web_search_calls;
+  }
+  if (!Array.isArray(output)) return 0;
+  return output.filter((item) => {
+    if (!item || typeof item !== "object") return false;
+    const { type, action } = item as Record<string, unknown>;
+    return (
+      type === "web_search_call" &&
+      !!action &&
+      typeof action === "object" &&
+      (action as Record<string, unknown>).type === "search"
+    );
+  }).length;
+}
+
 export function extractResponsesUsage(
   usage: Record<string, unknown> | undefined,
+  output?: unknown,
 ): AnthropicUsage {
   if (!usage) {
     return {
@@ -54,10 +86,14 @@ export function extractResponsesUsage(
     details && typeof details.cache_write_tokens === "number"
       ? details.cache_write_tokens
       : 0;
+  const webSearchRequests = countWebSearchRequests(usage, output);
   return {
     input_tokens: Math.max(inputTokens - cachedTokens - cacheWriteTokens, 0),
     output_tokens: outputTokens,
     cache_creation_input_tokens: cacheWriteTokens,
     cache_read_input_tokens: cachedTokens,
+    ...(webSearchRequests > 0
+      ? { server_tool_use: { web_search_requests: webSearchRequests } }
+      : {}),
   };
 }
