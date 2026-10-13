@@ -498,6 +498,21 @@ describe("responsesResponseToAnthropic", () => {
     });
   });
 
+  it("reports hosted searches in JSON usage and keeps them out of content", () => {
+    const out = responsesResponseToAnthropic({
+      id: "resp_ws",
+      model: "gpt-5.5",
+      output: [
+        { type: "web_search_call", id: "ws_1", status: "completed", action: { type: "search", query: "Paris weather" } },
+        { type: "web_search_call", id: "ws_2", status: "completed", action: { type: "open_page", url: "https://example.com" } },
+        { type: "message", content: [{ type: "output_text", text: "Sunny, 21°C." }] },
+      ],
+      usage: { input_tokens: 900, output_tokens: 40 },
+    });
+    expect(out.content).toEqual([{ type: "text", text: "Sunny, 21°C." }]);
+    expect(out.usage).toMatchObject({ server_tool_use: { web_search_requests: 1 } });
+  });
+
   it("text-only response stops with end_turn", () => {
     const out = responsesResponseToAnthropic({
       id: "resp_2",
@@ -634,6 +649,68 @@ describe("responsesSSEToAnthropicSSE", () => {
     expect(out).toContain("event: content_block_stop");
     expect(out).toContain('"stop_reason":"end_turn"');
     expect(out).toContain("event: message_stop");
+  });
+
+  it("reports hosted web searches from the terminal response in message_delta usage", async () => {
+    const source = sourceFrom([
+      { type: "response.created", response: { id: "resp_1", model: "gpt-5.5" } },
+      { type: "response.output_item.added", item: { id: "msg_1", type: "message" } },
+      { type: "response.output_text.delta", item_id: "msg_1", delta: "Sunny" },
+      {
+        type: "response.completed",
+        response: {
+          usage: { input_tokens: 10, output_tokens: 2 },
+          output: [
+            { type: "web_search_call", id: "ws_1", action: { type: "search", query: "weather in Paris" } },
+            { type: "message", id: "msg_1", content: [{ type: "output_text", text: "Sunny" }] },
+          ],
+        },
+      },
+    ]);
+    const out = await collect(responsesSSEToAnthropicSSE(source));
+    expect(out).toContain('"server_tool_use":{"web_search_requests":1}');
+  });
+
+  it("reports searches when the stream ends incomplete", async () => {
+    const source = sourceFrom([
+      { type: "response.created", response: { id: "r", model: "grok-4.7" } },
+      { type: "response.output_item.added", item: { id: "msg_1", type: "message" } },
+      { type: "response.output_text.delta", item_id: "msg_1", delta: "partial" },
+      {
+        type: "response.incomplete",
+        response: {
+          incomplete_details: { reason: "max_output_tokens" },
+          usage: {
+            input_tokens: 3_000,
+            output_tokens: 64,
+            server_side_tool_usage_details: { web_search_calls: 4, x_search_calls: 0 },
+          },
+          output: [],
+        },
+      },
+    ]);
+    const out = await collect(responsesSSEToAnthropicSSE(source, "grok-4.7"));
+    const delta = out.split("\n\n").find((frame) => frame.includes("message_delta"));
+    expect(delta).toContain('"stop_reason":"max_tokens"');
+    expect(delta).toContain('"server_tool_use":{"web_search_requests":4}');
+  });
+
+  it("never reports searches in message_start", async () => {
+    const source = sourceFrom([
+      { type: "response.created", response: { id: "r", model: "gpt-5.5" } },
+      { type: "response.output_item.added", item: { id: "ws_1", type: "web_search_call", action: { type: "search" } } },
+      {
+        type: "response.completed",
+        response: {
+          usage: { input_tokens: 5, output_tokens: 1 },
+          output: [{ type: "web_search_call", id: "ws_1", action: { type: "search" } }],
+        },
+      },
+    ]);
+    const out = await collect(responsesSSEToAnthropicSSE(source, "gpt-5.5"));
+    const start = out.split("\n\n").find((frame) => frame.includes("message_start"));
+    expect(start).not.toContain("server_tool_use");
+    expect(out).toContain('"server_tool_use":{"web_search_requests":1}');
   });
 
   it("emits the canonical model in message_start, not OpenAI's dated snapshot", async () => {

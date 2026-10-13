@@ -8,6 +8,7 @@ export const messagesUsage = z.strictObject({
   cache_creation_input_tokens: count,
   cache_read_input_tokens: count,
   speed: z.enum(["slow", "fast"]).optional(),
+  server_tool_use: z.strictObject({ web_search_requests: count }).optional(),
 });
 
 export const stopReason = z.enum(["end_turn", "max_tokens", "tool_use", "refusal"]);
