@@ -42,6 +42,22 @@ describe("extractResponsesUsage", () => {
     });
   });
 
+  it("splits cache_write_tokens out of input_tokens as cache_creation", () => {
+    // OpenAI's documented example: 2,600 input = 2,000 read + 400 written + 200 fresh.
+    expect(
+      extractResponsesUsage({
+        input_tokens: 2600,
+        output_tokens: 50,
+        input_tokens_details: { cached_tokens: 2000, cache_write_tokens: 400 },
+      }),
+    ).toEqual({
+      input_tokens: 200,
+      output_tokens: 50,
+      cache_creation_input_tokens: 400,
+      cache_read_input_tokens: 2000,
+    });
+  });
+
   it("clamps input_tokens at 0 when cached exceeds input", () => {
     const u = extractResponsesUsage({
       input_tokens: 10,

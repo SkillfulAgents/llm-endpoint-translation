@@ -1,10 +1,10 @@
 /**
  * OpenAI Responses API `usage` → Anthropic-shaped usage.
  *
- * Responses reports `input_tokens` as the TOTAL input (cache hits included),
- * with cached tokens under `input_tokens_details.cached_tokens`. Anthropic's
- * `input_tokens` EXCLUDES cache hits, so we subtract. There is no cache-write
- * concept, so `cache_creation_input_tokens` is always 0.
+ * Responses reports `input_tokens` as the TOTAL input, with cache reads under
+ * `input_tokens_details.cached_tokens` and (GPT-5.6+) cache writes under
+ * `input_tokens_details.cache_write_tokens`. Anthropic's `input_tokens`
+ * excludes both, so we subtract them.
  */
 
 export type AnthropicUsage = {
@@ -50,10 +50,14 @@ export function extractResponsesUsage(
     details && typeof details.cached_tokens === "number"
       ? details.cached_tokens
       : 0;
+  const cacheWriteTokens =
+    details && typeof details.cache_write_tokens === "number"
+      ? details.cache_write_tokens
+      : 0;
   return {
-    input_tokens: Math.max(inputTokens - cachedTokens, 0),
+    input_tokens: Math.max(inputTokens - cachedTokens - cacheWriteTokens, 0),
     output_tokens: outputTokens,
-    cache_creation_input_tokens: 0,
+    cache_creation_input_tokens: cacheWriteTokens,
     cache_read_input_tokens: cachedTokens,
   };
 }
