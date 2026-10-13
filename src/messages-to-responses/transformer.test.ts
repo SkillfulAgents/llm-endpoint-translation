@@ -477,6 +477,27 @@ describe("responsesResponseToAnthropic", () => {
     });
   });
 
+  it("reports GPT-5.6 cache writes as cache_creation_input_tokens", () => {
+    const out = responsesResponseToAnthropic({
+      id: "resp_cw",
+      model: "gpt-6-sol",
+      service_tier: "priority",
+      output: [{ type: "message", content: [{ type: "output_text", text: "done" }] }],
+      usage: {
+        input_tokens: 100_000,
+        output_tokens: 500,
+        input_tokens_details: { cached_tokens: 80_000, cache_write_tokens: 15_000 },
+      },
+    });
+    expect(out.usage).toEqual({
+      input_tokens: 5_000,
+      output_tokens: 500,
+      cache_creation_input_tokens: 15_000,
+      cache_read_input_tokens: 80_000,
+      speed: "fast",
+    });
+  });
+
   it("text-only response stops with end_turn", () => {
     const out = responsesResponseToAnthropic({
       id: "resp_2",
@@ -676,6 +697,53 @@ describe("responsesSSEToAnthropicSSE", () => {
       responsesSSEToAnthropicSSE(source, "gpt-5.5", (t) => tiers.push(t)),
     );
     expect(tiers).toEqual([]);
+  });
+
+  it("reports cache writes in the streamed message_delta usage", async () => {
+    const source = sourceFrom([
+      { type: "response.created", response: { id: "r", model: "gpt-6-sol" } },
+      { type: "response.output_item.added", item: { id: "msg_1", type: "message" } },
+      { type: "response.output_text.delta", item_id: "msg_1", delta: "hi" },
+      {
+        type: "response.completed",
+        response: {
+          usage: {
+            input_tokens: 100_000,
+            output_tokens: 1,
+            input_tokens_details: { cached_tokens: 80_000, cache_write_tokens: 15_000 },
+          },
+        },
+      },
+    ]);
+    const out = await collect(responsesSSEToAnthropicSSE(source, "gpt-6-sol"));
+    const delta = out.split("\n\n").find((frame) => frame.includes("message_delta"));
+    expect(delta).toContain('"input_tokens":5000');
+    expect(delta).toContain('"cache_creation_input_tokens":15000');
+    expect(delta).toContain('"cache_read_input_tokens":80000');
+  });
+
+  it("reports cache writes when the stream ends incomplete", async () => {
+    const source = sourceFrom([
+      { type: "response.created", response: { id: "r", model: "gpt-6-sol" } },
+      { type: "response.output_item.added", item: { id: "msg_1", type: "message" } },
+      { type: "response.output_text.delta", item_id: "msg_1", delta: "partial" },
+      {
+        type: "response.incomplete",
+        response: {
+          incomplete_details: { reason: "max_output_tokens" },
+          usage: {
+            input_tokens: 2_000,
+            output_tokens: 64,
+            input_tokens_details: { cached_tokens: 0, cache_write_tokens: 1_536 },
+          },
+        },
+      },
+    ]);
+    const out = await collect(responsesSSEToAnthropicSSE(source, "gpt-6-sol"));
+    const delta = out.split("\n\n").find((frame) => frame.includes("message_delta"));
+    expect(delta).toContain('"stop_reason":"max_tokens"');
+    expect(delta).toContain('"input_tokens":464');
+    expect(delta).toContain('"cache_creation_input_tokens":1536');
   });
 
   it("echoes the served tier into translated usage: priority → speed fast", async () => {
