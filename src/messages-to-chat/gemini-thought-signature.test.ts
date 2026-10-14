@@ -119,6 +119,32 @@ describe("Gemini thought signatures on the chat wire", () => {
     });
   });
 
+  it("keeps streamed parallel calls separate when each arrives in its own chunk without index", async () => {
+    // Recorded from gemini-4-argon, 2026-10-14: no `index`, one call per chunk, usage on every chunk.
+    const parallel = "ElkKVwFpFH0TnAnz1DDpBOGIXxkPCBXEUX8XIlRmCokrFPQWqBlo0/1Odotzaf5XZ06lupyjM+fv9s1oowH7yyQJO/5zHMlz1QTWF5fPyg5uHoej98o8OSo7Gg==";
+    const base = { created: 1792004497, id: "jtHPavirG4jVjMcPsoThUA", model: "gemini-4-argon", object: "chat.completion.chunk" };
+    const content = await streamToContent([
+      {
+        ...base,
+        choices: [{ delta: { role: "assistant", tool_calls: [{ extra_content: { google: { thought_signature: parallel } }, function: { arguments: '{"city":"Paris"}', name: "get_weather" }, id: "call_324079", type: "function" }] }, index: 0 }],
+        usage: { completion_tokens: 16, prompt_tokens: 39, total_tokens: 55 },
+      },
+      {
+        ...base,
+        choices: [{ delta: { role: "assistant", tool_calls: [{ function: { arguments: '{"city":"Lyon"}', name: "get_weather" }, id: "call_324080", type: "function" }] }, index: 0 }],
+        usage: { completion_tokens: 32, prompt_tokens: 39, total_tokens: 71 },
+      },
+      {
+        ...base,
+        choices: [{ delta: { role: "assistant" }, finish_reason: "stop", index: 0 }],
+        usage: { completion_tokens: 40, prompt_tokens: 99, total_tokens: 139 },
+      },
+    ]);
+    expect(content.map((b) => b.type)).toEqual(["thinking", "tool_use", "tool_use"]);
+    expect(content[1]).toMatchObject({ id: "call_324079", input: { city: "Paris" } });
+    expect(content[2]).toMatchObject({ id: "call_324080", input: { city: "Lyon" } });
+  });
+
   it("does not replay a signature minted for another model, and never sends thinking text", () => {
     const content = chatCompletionsResponseToMessages(reply, { reasoningReplayScope: SCOPE }).content as Json[];
     const request = nextRequest(content, "gemini/another-model");
@@ -169,6 +195,33 @@ describe("Gemini thought signatures on the chat wire", () => {
   it("adds no thinking block when no scope is set", () => {
     const content = chatCompletionsResponseToMessages(reply).content as Json[];
     expect(content.map((b) => b.type)).toEqual(["tool_use"]);
+  });
+});
+
+describe("documentsAsImageUrl", () => {
+  const pdfRequest = {
+    model: "gemini-4-argon",
+    max_tokens: 1024,
+    messages: [
+      {
+        role: "user",
+        content: [
+          { type: "document", source: { type: "base64", media_type: "application/pdf", data: "JVBERi0xLjQK" } },
+          { type: "text", text: "What is the secret word in this PDF?" },
+        ],
+      },
+    ],
+  };
+
+  it("sends an inline PDF as an image_url data URL, which Gemini reads (it 400s on file parts)", () => {
+    const content = (messagesRequestToChatCompletions(pdfRequest, { documentsAsImageUrl: true }).messages as Json[])[0]
+      .content as Json[];
+    expect(content[0]).toEqual({ type: "image_url", image_url: { url: "data:application/pdf;base64,JVBERi0xLjQK" } });
+  });
+
+  it("keeps the standard file part by default", () => {
+    const content = (messagesRequestToChatCompletions(pdfRequest).messages as Json[])[0].content as Json[];
+    expect(content[0].type).toBe("file");
   });
 });
 

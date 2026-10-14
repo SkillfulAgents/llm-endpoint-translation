@@ -34,6 +34,8 @@ export type ChatCompletionsRequestOptions = {
    * replayed function call that lost its signature.
    */
   reasoningReplayScope?: string;
+  /** Send inline documents as `image_url` data URLs; Gemini 400s on `file` parts. */
+  documentsAsImageUrl?: boolean;
 };
 
 /**
@@ -77,7 +79,7 @@ export function messagesRequestToChatCompletions(
   if (reasoningEffort) out.reasoning_effort = reasoningEffort;
   // Reasoning the model emits comes back as `reasoning_content`.
 
-  out.messages = convertMessages(body, options.reasoningReplayScope);
+  out.messages = convertMessages(body, options);
 
   const tools = convertTools(body.tools);
   if (tools.length > 0) out.tools = tools;
@@ -94,7 +96,7 @@ export function messagesRequestToChatCompletions(
 
 function convertMessages(
   body: Record<string, unknown>,
-  replayScope: string | undefined,
+  options: ChatCompletionsRequestOptions,
 ): Array<Record<string, unknown>> {
   const out: Array<Record<string, unknown>> = [];
   const system = systemToText(body.system);
@@ -116,9 +118,9 @@ function convertMessages(
     }
     if (!Array.isArray(content)) continue;
     if (role === "user") {
-      pushUserBlocks(out, content as Array<Record<string, unknown>>);
+      pushUserBlocks(out, content as Array<Record<string, unknown>>, options.documentsAsImageUrl === true);
     } else {
-      pushAssistantBlocks(out, content as Array<Record<string, unknown>>, replayScope);
+      pushAssistantBlocks(out, content as Array<Record<string, unknown>>, options.reasoningReplayScope);
     }
   }
   return out;
@@ -143,7 +145,9 @@ function pushSystemMessage(
 function pushUserBlocks(
   out: Array<Record<string, unknown>>,
   blocks: Array<Record<string, unknown>>,
+  documentsAsImageUrl: boolean,
 ): void {
+  const toPart = (doc: AnthropicDocument) => documentPart(doc, documentsAsImageUrl);
   // tool_result blocks become `tool` role messages (must directly follow the
   // assistant tool_calls turn); plain text/images collect into a user message.
   const userParts: Array<Record<string, unknown>> = [];
@@ -161,7 +165,7 @@ function pushUserBlocks(
     }
     if (block.type === "document") {
       const doc = anthropicDocument(block);
-      if (doc) userParts.push(documentPart(doc));
+      if (doc) userParts.push(toPart(doc));
       continue;
     }
     if (block.type === "tool_result" && typeof block.tool_use_id === "string") {
@@ -191,7 +195,7 @@ function pushUserBlocks(
           role: "user",
           content: [
             { type: "text", text: `[document output from tool ${block.tool_use_id}]` },
-            ...documents.map(documentPart),
+            ...documents.map(toPart),
           ],
         });
       }
@@ -260,7 +264,8 @@ function pushAssistantBlocks(
 }
 
 // Chat `file` parts take inline data only; a URL document can only be named in text.
-function documentPart(doc: AnthropicDocument): Record<string, unknown> {
+function documentPart(doc: AnthropicDocument, asImageUrl: boolean): Record<string, unknown> {
+  if (doc.kind === "file" && asImageUrl) return { type: "image_url", image_url: { url: doc.dataUrl } };
   if (doc.kind === "file") {
     return { type: "file", file: { filename: doc.filename, file_data: doc.dataUrl } };
   }

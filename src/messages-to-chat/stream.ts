@@ -244,7 +244,7 @@ class ChatTranslatorState {
 
   // Some vendors omit `index`; parallel calls are then told apart by their position in the delta.
   private emitToolCallDelta(call: Record<string, unknown>, position: number): void {
-    const callIndex = typeof call.index === "number" ? call.index : position;
+    const callIndex = this.toolCallIndex(call, position);
     const fn = (call.function ?? {}) as Record<string, unknown>;
     let toolCall = this.toolCalls.get(callIndex);
     if (!toolCall) {
@@ -272,6 +272,17 @@ class ChatTranslatorState {
     } else {
       toolCall.args += fn.arguments;
     }
+  }
+
+  // Gemini sends each parallel call in its own chunk, without `index`, so
+  // position alone would merge them; a new id at a taken position is a new call.
+  private toolCallIndex(call: Record<string, unknown>, position: number): number {
+    if (typeof call.index === "number") return call.index;
+    const id = typeof call.id === "string" ? call.id : "";
+    const taken = this.toolCalls.get(position);
+    if (!id || !taken || taken.id === id) return position;
+    for (const [index, toolCall] of this.toolCalls) if (toolCall.id === id) return index;
+    return Math.max(...this.toolCalls.keys()) + 1;
   }
 
   private pushDelta(index: number, kind: OpenBlock["kind"], text: string): void {
