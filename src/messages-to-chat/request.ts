@@ -17,6 +17,8 @@ import { readAnthropicJsonSchemaFormat, toChatResponseFormat } from "../shared/s
 import { disablesParallelToolUse } from "../shared/tool-choice.js";
 import { shortenToolName } from "../shared/tool-names.js";
 
+// https://ai.google.dev/gemini-api/docs/thought-signatures#faqs
+const SKIP_THOUGHT_SIGNATURE_VALIDATOR = "skip_thought_signature_validator";
 const CHAT_EFFORT_LEVELS = new Set(["low", "medium", "high", "xhigh", "max"]);
 
 export type ChatCompletionsRequestOptions = {
@@ -243,8 +245,12 @@ function pushAssistantBlocks(
     }
   }
   if (textParts.length === 0 && toolCalls.length === 0) return;
-  for (const call of toolCalls) {
-    const signature = thoughtSignatures.get(call.id as string);
+  for (const [i, call] of toolCalls.entries()) {
+    let signature = thoughtSignatures.get(call.id as string);
+    // Gemini signs only the first call of a parallel batch, and 400s when that
+    // one is unsigned (e.g. made by another model before a mid-turn switch).
+    // Google documents this placeholder for exactly that case.
+    if (!signature && i === 0 && replayScope) signature = SKIP_THOUGHT_SIGNATURE_VALIDATOR;
     if (signature) call.extra_content = { google: { thought_signature: signature } };
   }
   const msg: Record<string, unknown> = { role: "assistant" };

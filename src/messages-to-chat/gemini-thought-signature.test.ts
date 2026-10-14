@@ -122,8 +122,48 @@ describe("Gemini thought signatures on the chat wire", () => {
   it("does not replay a signature minted for another model, and never sends thinking text", () => {
     const content = chatCompletionsResponseToMessages(reply, { reasoningReplayScope: SCOPE }).content as Json[];
     const request = nextRequest(content, "gemini/another-model");
-    expect(replayedToolCall(request).extra_content).toBeUndefined();
+    expect(replayedToolCall(request).extra_content).toEqual({
+      google: { thought_signature: "skip_thought_signature_validator" },
+    });
+    expect(JSON.stringify(request)).not.toContain(SIGNATURE);
     expect(JSON.stringify(request)).not.toContain("thinking");
+  });
+
+  it("sends Google's placeholder on the first unsigned call only, e.g. calls another model made", () => {
+    const request = messagesRequestToChatCompletions(
+      {
+        model: "gemini-4-argon",
+        max_tokens: 1024,
+        tools: TOOLS,
+        messages: [
+          USER_TURN,
+          {
+            role: "assistant",
+            content: [
+              { type: "tool_use", id: "toolu_01Paris", name: "get_weather", input: { city: "Paris" } },
+              { type: "tool_use", id: "toolu_02Lyon", name: "get_weather", input: { city: "Lyon" } },
+            ],
+          },
+        ],
+      },
+      { reasoningReplayScope: SCOPE },
+    );
+    const calls = ((request.messages as Json[])[1].tool_calls as Json[]);
+    expect(calls[0].extra_content).toEqual({ google: { thought_signature: "skip_thought_signature_validator" } });
+    expect(calls[1].extra_content).toBeUndefined();
+  });
+
+  it("sends no placeholder when no scope is set", () => {
+    const request = messagesRequestToChatCompletions({
+      model: "glm-5.3-flash",
+      max_tokens: 1024,
+      tools: TOOLS,
+      messages: [
+        USER_TURN,
+        { role: "assistant", content: [{ type: "tool_use", id: "toolu_01Paris", name: "get_weather", input: { city: "Paris" } }] },
+      ],
+    });
+    expect(JSON.stringify(request)).not.toContain("extra_content");
   });
 
   it("adds no thinking block when no scope is set", () => {
