@@ -11,6 +11,7 @@ import {
   toolResultOutputText,
   type AnthropicDocument,
 } from "../shared/content.js";
+import { decodeReasoningSignature } from "../messages-to-responses/reasoning-replay.js";
 import { effortFromThinkingBudget } from "../shared/effort.js";
 import { readAnthropicJsonSchemaFormat, toChatResponseFormat } from "../shared/structured-output.js";
 import { disablesParallelToolUse } from "../shared/tool-choice.js";
@@ -25,6 +26,12 @@ export type ChatCompletionsRequestOptions = {
   mapReasoningEffort?: (body: Record<string, unknown>) => string | undefined;
   /** Token-limit field name; default `max_tokens`. OpenAI's GPT-5 chat models require `max_completion_tokens`. */
   tokenLimitField?: "max_tokens" | "max_completion_tokens";
+  /**
+   * Replay Gemini thought signatures minted under this scope back onto their
+   * tool calls (`extra_content.google.thought_signature`). Gemini 400s a
+   * replayed function call that lost its signature.
+   */
+  reasoningReplayScope?: string;
 };
 
 /**
@@ -68,7 +75,7 @@ export function messagesRequestToChatCompletions(
   if (reasoningEffort) out.reasoning_effort = reasoningEffort;
   // Reasoning the model emits comes back as `reasoning_content`.
 
-  out.messages = convertMessages(body);
+  out.messages = convertMessages(body, options.reasoningReplayScope);
 
   const tools = convertTools(body.tools);
   if (tools.length > 0) out.tools = tools;
@@ -85,6 +92,7 @@ export function messagesRequestToChatCompletions(
 
 function convertMessages(
   body: Record<string, unknown>,
+  replayScope: string | undefined,
 ): Array<Record<string, unknown>> {
   const out: Array<Record<string, unknown>> = [];
   const system = systemToText(body.system);
@@ -108,7 +116,7 @@ function convertMessages(
     if (role === "user") {
       pushUserBlocks(out, content as Array<Record<string, unknown>>);
     } else {
-      pushAssistantBlocks(out, content as Array<Record<string, unknown>>);
+      pushAssistantBlocks(out, content as Array<Record<string, unknown>>, replayScope);
     }
   }
   return out;
@@ -202,13 +210,23 @@ function pushUserBlocks(
 function pushAssistantBlocks(
   out: Array<Record<string, unknown>>,
   blocks: Array<Record<string, unknown>>,
+  replayScope: string | undefined,
 ): void {
   const textParts: string[] = [];
   const toolCalls: Array<Record<string, unknown>> = [];
+  const thoughtSignatures = new Map<string, string>();
   for (const block of blocks) {
     if (!block || typeof block !== "object") continue;
-    // thinking blocks are never replayed: vendors reject or misparse foreign
-    // reasoning in history (e.g. Fireworks 400s on thinking_blocks).
+    // Thinking text is never replayed: vendors reject or misparse foreign
+    // reasoning in history (e.g. Fireworks 400s on thinking_blocks). Only a
+    // signature minted for this exact scope rides back, on its tool call.
+    if (block.type === "thinking" && replayScope) {
+      const replay = decodeReasoningSignature(block.signature);
+      if (replay && replay.scope === replayScope) {
+        thoughtSignatures.set(replay.id, replay.encryptedContent);
+      }
+      continue;
+    }
     if (block.type === "text" && typeof block.text === "string") {
       textParts.push(block.text);
       continue;
@@ -225,6 +243,10 @@ function pushAssistantBlocks(
     }
   }
   if (textParts.length === 0 && toolCalls.length === 0) return;
+  for (const call of toolCalls) {
+    const signature = thoughtSignatures.get(call.id as string);
+    if (signature) call.extra_content = { google: { thought_signature: signature } };
+  }
   const msg: Record<string, unknown> = { role: "assistant" };
   msg.content = textParts.length > 0 ? textParts.join("\n\n") : null;
   if (toolCalls.length > 0) msg.tool_calls = toolCalls;
