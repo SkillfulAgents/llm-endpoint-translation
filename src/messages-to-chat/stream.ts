@@ -3,7 +3,11 @@
 import { responsesErrorToMessagesError } from "../messages-to-responses/error.js";
 import { readWithIdleTimeout, STREAM_IDLE_TIMEOUT_MS } from "../shared/idle-read.js";
 import { restoreToolName } from "../shared/tool-names.js";
-import { extractChatCompletionsUsage, mapFinishReason } from "./response.js";
+import {
+  extractChatCompletionsUsage,
+  mapFinishReason,
+  thoughtSignatureBlockSignature,
+} from "./response.js";
 
 export const CHAT_COMPLETIONS_STREAM_IDLE_TIMEOUT_MS = STREAM_IDLE_TIMEOUT_MS;
 
@@ -15,6 +19,8 @@ export type ChatCompletionsStreamOptions = {
   onAbnormalEnd?: (reason: "stalled" | "truncated") => void;
   /** Shortened → original tool names, from `toolNameRestoreMap(request)`. */
   toolNames?: Record<string, string>;
+  /** Carry Gemini tool-call thought signatures in a thinking block under this scope. */
+  reasoningReplayScope?: string;
 };
 
 export function chatCompletionsStreamToMessagesStream(
@@ -25,7 +31,11 @@ export function chatCompletionsStreamToMessagesStream(
   const idleTimeoutMs = options?.idleTimeoutMs ?? CHAT_COMPLETIONS_STREAM_IDLE_TIMEOUT_MS;
   const encoder = new TextEncoder();
   const decoder = new TextDecoder();
-  const state = new ChatTranslatorState(canonicalModel, options?.toolNames);
+  const state = new ChatTranslatorState(
+    canonicalModel,
+    options?.toolNames,
+    options?.reasoningReplayScope,
+  );
   const reader = input.getReader();
   let lineBuffer = "";
   // A client cancel ends the upstream read too; that is not an upstream fault.
@@ -96,7 +106,10 @@ function handleLine(rawLine: string, state: ChatTranslatorState): void {
 
 type OpenBlock = { index: number; kind: "thinking" | "text" | "tool_use" };
 type ToolCall = { id: string; name: string; args: string };
-type Deferred = { kind: "tool_use"; callIndex: number } | { kind: "thinking" | "text"; text: string };
+type Deferred =
+  | { kind: "tool_use"; callIndex: number }
+  | { kind: "thinking" | "text"; text: string }
+  | { kind: "signature"; signature: string };
 
 // Messages streams carry one open block at a time. Chat interleaves parallel tool-call
 // arguments, so only the first call streams live; later calls and any content after them are
@@ -121,6 +134,7 @@ class ChatTranslatorState {
   constructor(
     private readonly canonicalModel?: string,
     private readonly toolNames?: Record<string, string>,
+    private readonly replayScope?: string,
   ) {}
 
   get finished(): boolean {
@@ -230,7 +244,7 @@ class ChatTranslatorState {
 
   // Some vendors omit `index`; parallel calls are then told apart by their position in the delta.
   private emitToolCallDelta(call: Record<string, unknown>, position: number): void {
-    const callIndex = typeof call.index === "number" ? call.index : position;
+    const callIndex = this.toolCallIndex(call, position);
     const fn = (call.function ?? {}) as Record<string, unknown>;
     let toolCall = this.toolCalls.get(callIndex);
     if (!toolCall) {
@@ -240,11 +254,14 @@ class ChatTranslatorState {
         args: "",
       };
       this.toolCalls.set(callIndex, toolCall);
+      const signature = thoughtSignatureBlockSignature(call, toolCall.id, this.replayScope);
       if (this.sawToolCall) {
+        if (signature) this.deferred.push({ kind: "signature", signature });
         this.deferred.push({ kind: "tool_use", callIndex });
       } else {
         this.sawToolCall = true;
         this.closeLive();
+        if (signature) this.emitSignatureBlock(signature);
         this.live = this.openBlock("tool_use", toolUseStart(toolCall));
         this.liveCallIndex = callIndex;
       }
@@ -255,6 +272,17 @@ class ChatTranslatorState {
     } else {
       toolCall.args += fn.arguments;
     }
+  }
+
+  // Gemini sends each parallel call in its own chunk, without `index`, so
+  // position alone would merge them; a new id at a taken position is a new call.
+  private toolCallIndex(call: Record<string, unknown>, position: number): number {
+    if (typeof call.index === "number") return call.index;
+    const id = typeof call.id === "string" ? call.id : "";
+    const taken = this.toolCalls.get(position);
+    if (!id || !taken || taken.id === id) return position;
+    for (const [index, toolCall] of this.toolCalls) if (toolCall.id === id) return index;
+    return Math.max(...this.toolCalls.keys()) + 1;
   }
 
   private pushDelta(index: number, kind: OpenBlock["kind"], text: string): void {
@@ -299,11 +327,26 @@ class ChatTranslatorState {
       if (item.kind === "tool_use") {
         const toolCall = this.toolCalls.get(item.callIndex)!;
         this.emitWholeBlock("tool_use", toolUseStart(toolCall), toolCall.args);
+      } else if (item.kind === "signature") {
+        this.emitSignatureBlock(item.signature);
       } else {
         this.emitWholeBlock(item.kind, contentBlockStart(item.kind), item.text);
       }
     }
     this.deferred = [];
+  }
+
+  // Same shape as Anthropic's own wire: empty thinking, signature_delta, stop.
+  private emitSignatureBlock(signature: string): void {
+    const block = this.openBlock("thinking", contentBlockStart("thinking"));
+    this.pending.push(
+      sseEvent("content_block_delta", {
+        type: "content_block_delta",
+        index: block.index,
+        delta: { type: "signature_delta", signature },
+      }),
+    );
+    this.closeBlock(block.index);
   }
 
   private emitWholeBlock(kind: OpenBlock["kind"], contentBlock: Record<string, unknown>, text: string): void {
