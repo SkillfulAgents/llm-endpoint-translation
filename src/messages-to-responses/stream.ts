@@ -148,6 +148,8 @@ class ResponsesTranslatorState {
   // duplicate content_block_stop (double-stop makes the SDK dispatch a
   // tool_use twice → duplicated turns).
   private stopped = new Set<number>();
+  // tool_use indices that received at least one arguments delta.
+  private streamedArgs = new Set<number>();
 
   handleEvent(event: Record<string, unknown>): void {
     if (this.finishedMessage) return;
@@ -338,11 +340,16 @@ class ResponsesTranslatorState {
     if (!block) return;
     const delta = typeof event.delta === "string" ? event.delta : "";
     if (!delta) return;
+    this.streamedArgs.add(block.index);
+    this.pushArgs(block.index, delta);
+  }
+
+  private pushArgs(index: number, partialJson: string): void {
     this.pending.push(
       sseEvent("content_block_delta", {
         type: "content_block_delta",
-        index: block.index,
-        delta: { type: "input_json_delta", partial_json: delta },
+        index,
+        delta: { type: "input_json_delta", partial_json: partialJson },
       }),
     );
   }
@@ -357,6 +364,17 @@ class ResponsesTranslatorState {
     const itemId = typeof item.id === "string" ? item.id : "";
     const block = this.blocks.get(itemId);
     if (!block) return;
+    // A call whose arguments never streamed as deltas would otherwise reach the
+    // client as input {}; the finished item still carries the full arguments.
+    if (
+      block.kind === "tool_use" &&
+      !this.streamedArgs.has(block.index) &&
+      !this.stopped.has(block.index) &&
+      typeof item.arguments === "string" &&
+      item.arguments
+    ) {
+      this.pushArgs(block.index, item.arguments);
+    }
     this.emitBlockStop(block.index);
   }
 
