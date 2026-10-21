@@ -1065,6 +1065,33 @@ describe("responsesSSEToAnthropicSSE", () => {
     expect(out).toContain('"stop_reason":"tool_use"');
   });
 
+  it("takes parallel call arguments from the finished item when no deltas streamed", async () => {
+    const source = sourceFrom([
+      { type: "response.created", response: { id: "resp_4", model: "gpt-6-astra" } },
+      { type: "response.output_item.added", item: { id: "fc_1", type: "function_call", call_id: "call_1", name: "Read", arguments: "" } },
+      { type: "response.output_item.done", item: { id: "fc_1", type: "function_call", call_id: "call_1", name: "Read", arguments: '{"file_path":"/a/one.txt"}' } },
+      { type: "response.output_item.added", item: { id: "fc_2", type: "function_call", call_id: "call_2", name: "Read", arguments: "" } },
+      { type: "response.output_item.done", item: { id: "fc_2", type: "function_call", call_id: "call_2", name: "Read", arguments: '{"file_path":"/a/two.txt"}' } },
+      { type: "response.completed", response: { usage: { input_tokens: 5, output_tokens: 40 } } },
+    ]);
+    const out = await collect(responsesSSEToAnthropicSSE(source));
+    expect(out).toContain('"index":0,"delta":{"type":"input_json_delta","partial_json":"{\\"file_path\\":\\"/a/one.txt\\"}"}');
+    expect(out).toContain('"index":1,"delta":{"type":"input_json_delta","partial_json":"{\\"file_path\\":\\"/a/two.txt\\"}"}');
+    expect(out).toContain('"stop_reason":"tool_use"');
+  });
+
+  it("does not repeat streamed arguments from the finished item", async () => {
+    const source = sourceFrom([
+      { type: "response.created", response: { id: "resp_5", model: "gpt-6-astra" } },
+      { type: "response.output_item.added", item: { id: "fc_1", type: "function_call", call_id: "call_1", name: "Read", arguments: "" } },
+      { type: "response.function_call_arguments.delta", item_id: "fc_1", delta: '{"file_path":"/a/one.txt"}' },
+      { type: "response.output_item.done", item: { id: "fc_1", type: "function_call", call_id: "call_1", name: "Read", arguments: '{"file_path":"/a/one.txt"}' } },
+      { type: "response.completed", response: { usage: { input_tokens: 5, output_tokens: 20 } } },
+    ]);
+    const out = await collect(responsesSSEToAnthropicSSE(source));
+    expect(out.match(/input_json_delta/g)).toHaveLength(1);
+  });
+
   it("maps incomplete streams to max_tokens", async () => {
     const source = sourceFrom([
       { type: "response.created", response: { id: "resp_3", model: "gpt-5.5" } },
