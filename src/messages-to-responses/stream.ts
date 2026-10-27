@@ -280,6 +280,13 @@ class ResponsesTranslatorState {
     kind: BlockKind,
     contentBlock: Record<string, unknown>,
   ): void {
+    // Anthropic streams one block at a time. xAI adds the next item before the
+    // message item is done, so close an open text block first; text has
+    // nothing left to arrive at output_item.done, unlike tool arguments and
+    // reasoning signatures.
+    for (const block of this.blocks.values()) {
+      if (block.kind === "text") this.emitBlockStop(block.index);
+    }
     const index = this.nextIndex++;
     this.blocks.set(itemId, { index, kind });
     this.pending.push(
@@ -292,7 +299,12 @@ class ResponsesTranslatorState {
   }
 
   private onTextDelta(event: Record<string, unknown>): void {
-    const block = this.blockFor(event, "text", { type: "text", text: "" });
+    let block = this.blockFor(event, "text", { type: "text", text: "" });
+    // Text for an item whose block was closed early goes in a new block.
+    if (this.stopped.has(block.index) && typeof event.item_id === "string") {
+      this.blocks.delete(event.item_id);
+      block = this.blockFor(event, "text", { type: "text", text: "" });
+    }
     const delta = typeof event.delta === "string" ? event.delta : "";
     if (!delta) return;
     this.pending.push(
