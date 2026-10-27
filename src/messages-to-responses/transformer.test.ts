@@ -1065,6 +1065,41 @@ describe("responsesSSEToAnthropicSSE", () => {
     expect(out).toContain('"stop_reason":"tool_use"');
   });
 
+  it("closes the text block before the next block opens when the message item finishes last", async () => {
+    // xAI's order: the function call is added and done before the message item is done.
+    const source = sourceFrom([
+      { type: "response.created", response: { id: "resp_x", model: "grok-4.7" } },
+      { type: "response.output_item.added", item: { id: "msg_1", type: "message" } },
+      { type: "response.output_text.delta", item_id: "msg_1", delta: "I'll list the files." },
+      { type: "response.output_item.added", item: { id: "fc_1", type: "function_call", call_id: "call_1", name: "Bash", arguments: "" } },
+      { type: "response.function_call_arguments.delta", item_id: "fc_1", delta: '{"command":"ls"}' },
+      { type: "response.output_item.done", item: { id: "fc_1", type: "function_call", call_id: "call_1", name: "Bash", arguments: '{"command":"ls"}' } },
+      { type: "response.output_item.done", item: { id: "msg_1", type: "message" } },
+      { type: "response.completed", response: { usage: { input_tokens: 5, output_tokens: 12 } } },
+    ]);
+    const out = await collect(responsesSSEToAnthropicSSE(source));
+    const blockEvents = [...out.matchAll(/event: (content_block_start|content_block_stop)\ndata: \{"type":"\w+","index":(\d+)/g)]
+      .map((m) => `${m[1] === "content_block_start" ? "start" : "stop"} ${m[2]}`);
+    expect(blockEvents).toEqual(["start 0", "stop 0", "start 1", "stop 1"]);
+  });
+
+  it("puts text that arrives after its block closed early in a new block", async () => {
+    const source = sourceFrom([
+      { type: "response.created", response: { id: "resp_y", model: "grok-4.7" } },
+      { type: "response.output_item.added", item: { id: "msg_1", type: "message" } },
+      { type: "response.output_text.delta", item_id: "msg_1", delta: "Listing." },
+      { type: "response.output_item.added", item: { id: "fc_1", type: "function_call", call_id: "call_1", name: "Bash", arguments: "" } },
+      { type: "response.output_text.delta", item_id: "msg_1", delta: " Still here." },
+      { type: "response.output_item.done", item: { id: "fc_1", type: "function_call", call_id: "call_1", name: "Bash", arguments: '{"command":"ls"}' } },
+      { type: "response.output_item.done", item: { id: "msg_1", type: "message" } },
+      { type: "response.completed", response: { usage: { input_tokens: 5, output_tokens: 12 } } },
+    ]);
+    const out = await collect(responsesSSEToAnthropicSSE(source));
+    expect(out).toContain('"index":0,"delta":{"type":"text_delta","text":"Listing."}');
+    expect(out).toContain('"index":2,"delta":{"type":"text_delta","text":" Still here."}');
+    expect(out.match(/event: content_block_stop/g)).toHaveLength(3);
+  });
+
   it("takes parallel call arguments from the finished item when no deltas streamed", async () => {
     const source = sourceFrom([
       { type: "response.created", response: { id: "resp_4", model: "gpt-6-astra" } },
