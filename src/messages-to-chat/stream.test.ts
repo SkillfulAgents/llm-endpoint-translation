@@ -7,10 +7,15 @@ import { chatCompletionsStreamToMessagesStream } from "./stream.js";
 
 type Json = Record<string, unknown>;
 
-async function translate(chunks: Json[]): Promise<Json[]> {
+async function translate(
+  chunks: Json[],
+  options: Parameters<typeof chatCompletionsStreamToMessagesStream>[1] = {},
+): Promise<Json[]> {
   const body = chunks.map((chunk) => `data: ${JSON.stringify(chunk)}\n\n`).join("") + "data: [DONE]\n\n";
   const input = new Response(body).body!;
-  const text = await new Response(chatCompletionsStreamToMessagesStream(input, { model: "m" })).text();
+  const text = await new Response(
+    chatCompletionsStreamToMessagesStream(input, { model: "m", ...options }),
+  ).text();
   return text
     .split("\n")
     .filter((line) => line.startsWith("data: "))
@@ -294,5 +299,101 @@ describe("chatCompletionsStreamToMessagesStream — one open block at a time", (
       "content_block_stop",
       "error",
     ]);
+  });
+});
+
+describe("chatCompletionsStreamToMessagesStream — Gemini thought tags", () => {
+  const content = (text: string): Json => ({ id: "g1", choices: [{ index: 0, delta: { role: "assistant", content: text } }] });
+  const stop: Json = {
+    id: "g1",
+    choices: [{ index: 0, delta: {}, finish_reason: "stop" }],
+    usage: { prompt_tokens: 30, completion_tokens: 3, total_tokens: 2174 },
+  };
+
+  const asFrames = (events: Json[]) => events.map((data) => ({ event: data.type as string, data }));
+
+  function blocks(events: Json[]): Array<{ type: unknown; text: string }> {
+    const out = new Map<unknown, { type: unknown; text: string }>();
+    for (const event of events) {
+      const block = event.content_block as Json | undefined;
+      const delta = event.delta as Json | undefined;
+      if (event.type === "content_block_start") out.set(event.index, { type: block!.type, text: "" });
+      if (event.type === "content_block_delta") {
+        const piece = delta!.thinking ?? delta!.text ?? delta!.partial_json ?? "";
+        out.get(event.index)!.text += piece as string;
+      }
+    }
+    return [...out.values()];
+  }
+
+  // Shape recorded from gemini-4-carbon with include_thoughts, 2026-11-11.
+  it("splits the leading thought summaries into a thinking block before the answer", async () => {
+    const events = await translate(
+      [
+        content("<thought>**Calculating the Result**\n\nI am counting the multiples.\n\n\n"),
+        content("**Verifying the Edge Cases**\n\nThe bound is exclusive.\n\n\n"),
+        content("</thought>761"),
+        stop,
+      ],
+      { splitThoughtTags: true },
+    );
+    assertMessagesStreamGrammar(asFrames(events));
+    expect(blocks(events)).toEqual([
+      {
+        type: "thinking",
+        text: "**Calculating the Result**\n\nI am counting the multiples.\n\n\n**Verifying the Edge Cases**\n\nThe bound is exclusive.\n\n\n",
+      },
+      { type: "text", text: "761" },
+    ]);
+  });
+
+  it("closes the thinking block when a tool call follows the closing tag", async () => {
+    const events = await translate(
+      [
+        content("<thought>**Defining the Request**\n\nI will call the weather tool.\n\n\n"),
+        {
+          id: "g1",
+          choices: [
+            {
+              index: 0,
+              delta: {
+                content: "</thought>",
+                tool_calls: [{ id: "call_1", type: "function", function: { name: "get_weather", arguments: '{"city":"Paris"}' } }],
+              },
+            },
+          ],
+        },
+        { ...stop, choices: [{ index: 0, delta: {}, finish_reason: "tool_calls" }] },
+      ],
+      { splitThoughtTags: true },
+    );
+    assertMessagesStreamGrammar(asFrames(events));
+    expect(blocks(events)).toEqual([
+      { type: "thinking", text: "**Defining the Request**\n\nI will call the weather tool.\n\n\n" },
+      { type: "tool_use", text: '{"city":"Paris"}' },
+    ]);
+  });
+
+  it("finds tags cut across chunks", async () => {
+    const events = await translate(
+      [content("<tho"), content("ught>Checking the sum.</th"), content("ought>Done."), stop],
+      { splitThoughtTags: true },
+    );
+    expect(blocks(events)).toEqual([
+      { type: "thinking", text: "Checking the sum." },
+      { type: "text", text: "Done." },
+    ]);
+  });
+
+  it("keeps an answer with no leading tag as text, tags inside it included", async () => {
+    const events = await translate([content("Use <thought> tags like </thought> this."), stop], {
+      splitThoughtTags: true,
+    });
+    expect(blocks(events)).toEqual([{ type: "text", text: "Use <thought> tags like </thought> this." }]);
+  });
+
+  it("leaves content as text when the option is off", async () => {
+    const events = await translate([content("<thought>Plan.</thought>Answer."), stop]);
+    expect(blocks(events)).toEqual([{ type: "text", text: "<thought>Plan.</thought>Answer." }]);
   });
 });
