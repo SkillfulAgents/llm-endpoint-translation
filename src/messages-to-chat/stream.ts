@@ -21,6 +21,11 @@ export type ChatCompletionsStreamOptions = {
   toolNames?: Record<string, string>;
   /** Carry Gemini tool-call thought signatures in a thinking block under this scope. */
   reasoningReplayScope?: string;
+  /**
+   * Gemini with `include_thoughts` streams its thought summaries inside `content`,
+   * as a leading `<thought>…</thought>`. Emit that part as thinking.
+   */
+  splitThoughtTags?: boolean;
 };
 
 export function chatCompletionsStreamToMessagesStream(
@@ -35,6 +40,7 @@ export function chatCompletionsStreamToMessagesStream(
     canonicalModel,
     options?.toolNames,
     options?.reasoningReplayScope,
+    options?.splitThoughtTags,
   );
   const reader = input.getReader();
   let lineBuffer = "";
@@ -104,6 +110,9 @@ function handleLine(rawLine: string, state: ChatTranslatorState): void {
   state.handleChunk(chunk);
 }
 
+const THOUGHT_OPEN = "<thought>";
+const THOUGHT_CLOSE = "</thought>";
+
 type OpenBlock = { index: number; kind: "thinking" | "text" | "tool_use" };
 type ToolCall = { id: string; name: string; args: string };
 type Deferred =
@@ -130,12 +139,18 @@ class ChatTranslatorState {
   // Chat tool_calls are keyed by their array index within the delta.
   private toolCalls = new Map<number, ToolCall>();
   private deferred: Deferred[] = [];
+  // Where `content` is relative to a leading `<thought>` block; `carry` holds a tag cut across chunks.
+  private thought: "start" | "in" | "done";
+  private thoughtCarry = "";
 
   constructor(
     private readonly canonicalModel?: string,
     private readonly toolNames?: Record<string, string>,
     private readonly replayScope?: string,
-  ) {}
+    splitThoughtTags?: boolean,
+  ) {
+    this.thought = splitThoughtTags ? "start" : "done";
+  }
 
   get finished(): boolean {
     return this.finishedMessage;
@@ -177,7 +192,7 @@ class ChatTranslatorState {
       this.emitThinkingDelta(delta.reasoning_content);
     }
     if (typeof delta.content === "string" && delta.content) {
-      this.emitTextDelta(delta.content);
+      this.emitContent(delta.content);
     }
     if (typeof delta.refusal === "string" && delta.refusal) {
       this.sawRefusal = true;
@@ -226,6 +241,47 @@ class ChatTranslatorState {
 
   private emitTextDelta(text: string): void {
     this.emitContentDelta("text", text);
+  }
+
+  private emitContent(text: string): void {
+    if (this.thought === "done") {
+      this.emitTextDelta(text);
+      return;
+    }
+    let rest = this.thoughtCarry + text;
+    this.thoughtCarry = "";
+    if (this.thought === "start") {
+      if (THOUGHT_OPEN.startsWith(rest)) {
+        this.thoughtCarry = rest;
+        return;
+      }
+      if (!rest.startsWith(THOUGHT_OPEN)) {
+        this.thought = "done";
+        this.emitTextDelta(rest);
+        return;
+      }
+      rest = rest.slice(THOUGHT_OPEN.length);
+      this.thought = "in";
+    }
+    const end = rest.indexOf(THOUGHT_CLOSE);
+    if (end === -1) {
+      const keep = partialTagSuffix(rest, THOUGHT_CLOSE);
+      if (rest.length > keep) this.emitThinkingDelta(rest.slice(0, rest.length - keep));
+      this.thoughtCarry = rest.slice(rest.length - keep);
+      return;
+    }
+    if (end > 0) this.emitThinkingDelta(rest.slice(0, end));
+    this.thought = "done";
+    const after = rest.slice(end + THOUGHT_CLOSE.length);
+    if (after) this.emitTextDelta(after);
+  }
+
+  private flushThoughtCarry(): void {
+    if (!this.thoughtCarry) return;
+    const text = this.thoughtCarry;
+    this.thoughtCarry = "";
+    if (this.thought === "in") this.emitThinkingDelta(text);
+    else this.emitTextDelta(text);
   }
 
   private emitContentDelta(kind: "thinking" | "text", text: string): void {
@@ -358,6 +414,7 @@ class ChatTranslatorState {
   finish(): void {
     if (this.finishedMessage) return;
     if (!this.startedMessage) this.emitMessageStart();
+    this.flushThoughtCarry();
     this.closeAllBlocks();
     this.pending.push(
       sseEvent("message_delta", {
@@ -380,6 +437,7 @@ class ChatTranslatorState {
 
   finishAbnormally(message: string, type = "overloaded_error"): void {
     if (this.finishedMessage) return;
+    this.flushThoughtCarry();
     this.closeAllBlocks();
     this.pending.push(
       sseEvent("error", {
@@ -395,6 +453,14 @@ class ChatTranslatorState {
     this.pending = [];
     return out;
   }
+}
+
+// Length of the longest end of `text` that could be the start of `tag`.
+function partialTagSuffix(text: string, tag: string): number {
+  for (let n = Math.min(text.length, tag.length - 1); n > 0; n--) {
+    if (tag.startsWith(text.slice(-n))) return n;
+  }
+  return 0;
 }
 
 function contentBlockStart(kind: "thinking" | "text"): Record<string, unknown> {
